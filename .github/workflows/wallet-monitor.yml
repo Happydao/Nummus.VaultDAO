@@ -26,7 +26,6 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_NUMMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
-          SENDER="9R3BLNAWxJvk9wJUfAy7twAEeX7xcRgtzMGVhQ1tHuyZ"
 
           API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
@@ -71,14 +70,14 @@ jobs:
 
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" --arg S "$SENDER" '
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
               | . as $tx
               | .tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W and .fromUserAccount == $S)
+              | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: .rawTokenAmount.uiAmountString,
+                  amount: (.rawTokenAmount.uiAmountString // ((.rawTokenAmount.amount | tonumber) / (10 ^ (.rawTokenAmount.decimals | tonumber))) | tostring),
                   timestamp: ($tx.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
@@ -92,7 +91,7 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: .rawTokenAmount.uiAmountString,
+                  amount: (.rawTokenAmount.uiAmountString // ((.rawTokenAmount.amount | tonumber) / (10 ^ (.rawTokenAmount.decimals | tonumber))) | tostring),
                   timestamp: ($tx.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
