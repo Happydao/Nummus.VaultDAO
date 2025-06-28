@@ -77,10 +77,15 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: (.rawTokenAmount.uiAmountString // ((.rawTokenAmount.amount | tonumber) / (10 | pow( (.rawTokenAmount.decimals | tonumber) ))) | tostring),
-                  timestamp: ($tx.timestamp | tostring)
+                  raw_amount: (.rawTokenAmount.amount | tonumber),
+                  decimals: (.rawTokenAmount.decimals | tonumber),
+                  timestamp: ($tx.timestamp | tonumber)
                 }
-            ] | sort_by(.timestamp) | reverse | .[:2]')
+            ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
+              map({
+                amount: ((.raw_amount) / (10 ^ .decimals)),
+                timestamp: (.timestamp | todate)
+              })')
 
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
@@ -91,10 +96,15 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: (.rawTokenAmount.uiAmountString // ((.rawTokenAmount.amount | tonumber) / (10 | pow( (.rawTokenAmount.decimals | tonumber) ))) | tostring),
-                  timestamp: ($tx.timestamp | tostring)
+                  raw_amount: (.rawTokenAmount.amount | tonumber),
+                  decimals: (.rawTokenAmount.decimals | tonumber),
+                  timestamp: ($tx.timestamp | tonumber)
                 }
-            ] | sort_by(.timestamp) | reverse | .[:2]')
+            ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
+              map({
+                amount: ((.raw_amount) / (10 ^ .decimals)),
+                timestamp: (.timestamp | todate)
+              })')
 
           cat <<EOF > data/status.json
           {
