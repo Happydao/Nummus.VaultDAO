@@ -69,55 +69,23 @@ jobs:
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
-
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | .tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W)
-              | {
-                  raw: .rawTokenAmount.amount,
-                  dec: .rawTokenAmount.decimals,
-                  timestamp: ($tx.timestamp | tonumber)
-                }
-            ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
-              map({
-                amount: ( (.raw | tonumber) / (10 ^ (.dec | tonumber)) ),
-                timestamp: (.timestamp | todate)
-              })')
+          echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
 
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
-
-          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | .tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W)
-              | {
-                  raw: .rawTokenAmount.amount,
-                  dec: .rawTokenAmount.decimals,
-                  timestamp: ($tx.timestamp | tonumber)
-                }
-            ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
-              map({
-                amount: ( (.raw | tonumber) / (10 ^ (.dec | tonumber)) ),
-                timestamp: (.timestamp | todate)
-              })')
+          echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
           cat <<EOF > data/status.json
           {
             "wallet_1": {
               "tbtc_balance": "$TBTC_BAL_W1",
               "numus_balance": "$NUMMUS_BAL_W1",
-              "last_tbtc_received": $LAST_TBTC_W1
+              "last_tbtc_received": []
             },
             "vault_wallet_2": {
               "tbtc_balance": "$TBTC_BAL_W2",
-              "last_tbtc_received": $LAST_TBTC_W2
+              "last_tbtc_received": []
             },
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            "timestamp": "\$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
 
@@ -125,5 +93,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/status.json && git commit -m "Update balances and transfers" && git push)
-          
+          git diff --quiet || (git add data/*.json && git commit -m "Debug: show last 10 transfers" && git push)
