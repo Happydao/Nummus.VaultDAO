@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Nummus → tBTC Monitor</title>
+  <title>$NUMMUS → tBTC Monitor</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -31,7 +31,7 @@
 
     .card {
       background-color: rgba(30, 30, 30, 0.92);
-      border: 2px solid #bba76f; /* bordo bronzo */
+      border: 2px solid #bba76f;
       border-radius: 10px;
       padding: 1.5rem;
       width: 360px;
@@ -39,7 +39,6 @@
         0 0 12px rgba(255, 215, 0, 0.15),
         0 0 5px rgba(255, 255, 200, 0.2),
         inset 0 0 6px rgba(255, 255, 255, 0.05);
-      text-align: center;
       transition: transform 0.2s ease;
     }
 
@@ -57,11 +56,17 @@
       font-weight: bold;
       color: #ffd700;
       text-decoration: none;
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
+      text-align: center;
     }
 
     .wallet-link:hover {
       text-decoration: underline;
+    }
+
+    .balance,
+    .transfers {
+      text-align: right;
     }
 
     strong {
@@ -86,7 +91,7 @@
   </style>
 </head>
 <body>
-  <h1><strong>Nummus ↔ tBTC Monitor</strong></h1>
+  <h1><strong>$NUMMUS → tBTC Monitor</strong></h1>
 
   <div class="container">
     <!-- Swap Wallet -->
@@ -94,7 +99,7 @@
       <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
         tBTC Swap Wallet
       </a>
-      <p><strong>BALANCE:</strong> <span id="swap-balance">--</span> tBTC</p>
+      <p class="balance"><strong>BALANCE:</strong> <strong><span id="swap-balance">--</span></strong> tBTC</p>
       <div class="transfers" id="swap-transfers">Loading transactions...</div>
     </div>
 
@@ -103,7 +108,7 @@
       <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
         Vault tBTC Nummus
       </a>
-      <p><strong>BALANCE:</strong> <span id="vault-balance">--</span> tBTC</p>
+      <p class="balance"><strong>BALANCE:</strong> <strong><span id="vault-balance">--</span></strong> tBTC</p>
       <div class="transfers" id="vault-transfers">Loading last received...</div>
     </div>
   </div>
@@ -120,7 +125,7 @@
         const swapTransfersEl = document.getElementById('swap-transfers');
         swapTransfersEl.innerHTML = transfers1.length
           ? transfers1.map(t =>
-              `<div>${t.timestamp} — <span style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</span></div>`
+              `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`
             ).join('')
           : 'No transactions found.';
 
@@ -130,7 +135,7 @@
         const vaultTransfersEl = document.getElementById('vault-transfers');
         vaultTransfersEl.innerHTML = transfers2.length
           ? transfers2.map(t =>
-              `<div>${t.timestamp} — <span style="color:#0f0">+${t.amount}</span></div>`
+              `<div>${t.timestamp} — <strong style="color:#0f0">+${t.amount}</strong></div>`
             ).join('')
           : 'No incoming transfers.';
 
