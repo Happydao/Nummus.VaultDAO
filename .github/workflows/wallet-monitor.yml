@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Ogni 5 minuti. Per ogni 2 ore: '0 */2 * * *'
+    - cron: '*/5 * * * *'  # Ogni 5 minuti. Cambia in '0 */2 * * *' per ogni 2 ore
   workflow_dispatch:
 
 jobs:
@@ -71,7 +71,7 @@ jobs:
           echo "$XFERS_W1" | jq '.[0:30] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === LAST 30 TBTC TXs (IN/OUT) FOR WALLET 1 ===
+          # === LAST 30 tBTC TRANSFERS (in/out) WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
@@ -79,7 +79,7 @@ jobs:
               | $tx.tokenTransfers[]
               | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
               | {
-                  timestamp: $tx.timestamp,
+                  timestamp: ($tx.timestamp | todateiso8601),
                   amount: (
                     if .toUserAccount == $W then
                       "+" + (.tokenAmount | tostring)
@@ -90,14 +90,14 @@ jobs:
                 }
             ] | sort_by(.timestamp) | reverse | .[:30]')
 
-          # === LAST 2 TBTC RECEIVED FOR WALLET 2 ===
+          # === LAST 2 RECEIVED tBTC WALLET 2 ===
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
               | . as $tx
               | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
               | {
-                  timestamp: $tx.timestamp,
+                  timestamp: ($tx.timestamp | todateiso8601),
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
