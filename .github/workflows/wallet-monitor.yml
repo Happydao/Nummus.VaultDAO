@@ -78,9 +78,9 @@ jobs:
               | select(.tokenTransfers != null)
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
-              | select(.rawTokenAmount.amount != null and .rawTokenAmount.decimals != null)
+              | select(.rawTokenAmount.amount and .rawTokenAmount.decimals)
               | {
-                  amount: ((.rawTokenAmount.amount | tonumber) / (10 ^ (.rawTokenAmount.decimals | tonumber))),
+                  amount: ((.rawTokenAmount.amount | tonumber) / (10 | pow(.rawTokenAmount.decimals | tonumber))),
                   timestamp: (.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
@@ -93,9 +93,9 @@ jobs:
               | select(.tokenTransfers != null)
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
-              | select(.rawTokenAmount.amount != null and .rawTokenAmount.decimals != null)
+              | select(.rawTokenAmount.amount and .rawTokenAmount.decimals)
               | {
-                  amount: ((.rawTokenAmount.amount | tonumber) / (10 ^ (.rawTokenAmount.decimals | tonumber))),
+                  amount: ((.rawTokenAmount.amount | tonumber) / (10 | pow(.rawTokenAmount.decimals | tonumber))),
                   timestamp: (.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
