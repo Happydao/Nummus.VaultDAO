@@ -12,7 +12,7 @@ jobs:
       HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install tools
@@ -45,14 +45,20 @@ jobs:
 
           echo "$RESPONSE" > data/vault_raw.json
 
+          # Estrai balance e decimali, poi calcola divisione con awk
           BALANCE=$(echo "$RESPONSE" | jq -r --arg M "$TBTC_MINT" '
             .result.items[]
             | select(.id == $M)
-            | ((.token_info.balance | tonumber) / (10 ^ (.token_info.decimals | tonumber)))
-          ')
+            | {
+                bal: (.token_info.balance | tonumber),
+                dec: (.token_info.decimals | tonumber)
+              }
+            | "\(.bal) \(.dec)"
+          ' | awk '{ printf "%.8f\n", $1 / (10 ^ $2) }')
 
           echo "✅ Vault TBTC balance: $BALANCE"
 
+          # Scrivi nel file JSON
           cat <<EOF > data/status.json
           {
             "vault_address": "$VAULT",
