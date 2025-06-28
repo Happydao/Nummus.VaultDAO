@@ -43,14 +43,18 @@ jobs:
           }')
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
-            {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-            "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+            .result.items[]? 
+            | select(.token_info.mint == $M) 
+            | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
+            | "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+          TBTC_BAL_W1=${TBTC_BAL_W1:-"0.00000000"}
 
           NUMMUS_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_NUMMUS" '
-            .result.items[]? | select(.id == $M) |
-            {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-            "\(.bal) \(.dec)"' | awk '{ printf "%.6f", $1 / (10 ^ $2) }')
+            .result.items[]? 
+            | select(.token_info.mint == $M) 
+            | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
+            | "\(.bal) \(.dec)"' | awk '{ printf "%.6f", $1 / (10 ^ $2) }')
+          NUMMUS_BAL_W1=${NUMMUS_BAL_W1:-"0.000000"}
 
           # === WALLET 2 BALANCES ===
           BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
@@ -66,9 +70,11 @@ jobs:
           }')
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
-            {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-            "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+            .result.items[]? 
+            | select(.token_info.mint == $M) 
+            | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
+            | "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+          TBTC_BAL_W2=${TBTC_BAL_W2:-"0.00000000"}
 
           # === TRANSACTIONS ===
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
@@ -77,7 +83,6 @@ jobs:
           echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === PARSE LAST 2 RECEIVED TBTC TRANSFERS ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
@@ -87,7 +92,7 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    | .tokenAmount | tonumber / 1e8
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
@@ -101,15 +106,15 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    | .tokenAmount | tonumber / 1e8
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
-          # === WRITE STATUS.JSON SAFELY ===
+          # === WRITE OUTPUT ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
-            --arg num1 "$NUMMUS_BAL_W1" \
+            --arg nummus1 "$NUMMUS_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
             --arg tbtc2 "$TBTC_BAL_W2" \
             --argjson last2 "$LAST_TBTC_W2" \
@@ -117,7 +122,7 @@ jobs:
             '{
               wallet_1: {
                 tbtc_balance: $tbtc1,
-                numus_balance: $num1,
+                nummus_balance: $nummus1,
                 last_tbtc_received: $last1
               },
               vault_wallet_2: {
@@ -131,4 +136,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: latest balances and transfers" && git push)
