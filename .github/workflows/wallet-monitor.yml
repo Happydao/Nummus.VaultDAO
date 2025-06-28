@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Ogni 5 minuti. Per ogni 2 ore: '0 */2 * * *'
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 jobs:
