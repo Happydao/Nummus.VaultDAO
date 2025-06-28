@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '*/5 * * * *'  # Ogni 5 minuti. Per ogni 2 ore: '0 */2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -81,9 +81,9 @@ jobs:
                   timestamp: .timestamp,
                   amount: (
                     if .toUserAccount == $W then
-                      "+" + (.tokenAmount.uiAmount | tostring)
+                      "+" + (.tokenAmount | tostring)
                     else
-                      "-" + (.tokenAmount.uiAmount | tostring)
+                      "-" + (.tokenAmount | tostring)
                     end
                   )
                 }
@@ -99,7 +99,7 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount.uiAmount
+                    | .tokenAmount
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
