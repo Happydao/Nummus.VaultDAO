@@ -2,14 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TBTC Swap Monitor</title>
+  <title>NUMUS → TBTC Monitor</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Swap Monitor: NUMUS → TBTC</h1>
-  <div id="status-box">⏳ Loading...</div>
+  <h1>NUMUS ↔ TBTC Swap Monitor</h1>
+
+  <div class="container">
+    <div class="card" id="numus-card">
+      <h2>NUMUS Wallet</h2>
+      <p id="numus-status">⏳ Checking swap...</p>
+      <p><strong>TBTC balance:</strong> <span id="numus-balance">--</span></p>
+    </div>
+
+    <div class="card" id="vault-card">
+      <h2>TBTC Vault (Bolt)</h2>
+      <p id="vault-status">⏳ Checking vault...</p>
+      <p><strong>TBTC balance:</strong> <span id="vault-balance">--</span></p>
+    </div>
+  </div>
+
   <p id="timestamp"></p>
   <script src="assets/script.js"></script>
 </body>
 </html>
-
