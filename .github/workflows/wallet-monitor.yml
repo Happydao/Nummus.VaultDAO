@@ -1,4 +1,4 @@
-name: Monitor Wallets
+name: Monitor Wallets and Balances
 
 on:
   schedule:
@@ -11,45 +11,50 @@ jobs:
     env:
       HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Fetch wallet states via Helius
+      - name: Query token balances and write status
         run: |
           mkdir -p data
 
-          SWAP_WALLET="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
-          VAULT_WALLET="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          TBTC_MINT="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+          WALLET_1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+          WALLET_2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           API_KEY="$HELIUS_API_KEY"
 
-          # Chiedi ultimi 20 tx del wallet di swap
-          curl -s "https://api.helius.xyz/v0/addresses/$SWAP_WALLET/transactions?api-key=$API_KEY&limit=20" > data/swap-tx.json
+          get_balance() {
+            local WALLET=$1
+            curl -s "https://api.helius.xyz/v0/addresses/$WALLET/tokens?api-key=$API_KEY" | \
+            jq -r --arg MINT "$TBTC_MINT" '.[] | select(.mint == $MINT) | (.amount | tonumber) / (10 ^ (.decimals | tonumber))' || echo 0
+          }
 
-          # Chiedi ultimi 10 tx del vault
-          curl -s "https://api.helius.xyz/v0/addresses/$VAULT_WALLET/transactions?api-key=$API_KEY&limit=10" > data/vault-tx.json
+          BALANCE_1=$(get_balance $WALLET_1)
+          BALANCE_2=$(get_balance $WALLET_2)
 
-          # Placeholder semplice per ora
-          # Logica più fine si aggiunge nel prossimo step
+          # Determina lo stato
           STATUS="swap_pending"
-
-          if grep -q "TBTC" data/swap-tx.json; then
+          if (( $(echo "$BALANCE_1 > 0" | bc -l) )); then
             STATUS="awaiting_transfer"
           fi
-
-          if grep -q "TBTC" data/vault-tx.json; then
+          if (( $(echo "$BALANCE_2 > 0" | bc -l) )); then
             STATUS="transferred"
           fi
 
+          echo "Wallet 1 TBTC: $BALANCE_1"
+          echo "Wallet 2 TBTC: $BALANCE_2"
           echo "Status: $STATUS"
 
-          echo '{
-            "status": "'$STATUS'",
-            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
-          }' > data/status.json
+          # Scrive il file JSON
+          echo "{
+            \"status\": \"$STATUS\",
+            \"numus_balance\": \"$BALANCE_1\",
+            \"vault_balance\": \"$BALANCE_2\",
+            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+          }" > data/status.json
 
       - name: Commit changes if any
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git diff --quiet || (git add data/status.json && git commit -m "Update status" && git push)
-
