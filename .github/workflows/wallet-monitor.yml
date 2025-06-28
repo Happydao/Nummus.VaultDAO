@@ -77,17 +77,17 @@ jobs:
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
-              | {timestamp, transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W) | {amount: .tokenAmount}]}
+              | {timestamp, transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W) | {amount: .tokenAmount, timestamp: (.timestamp | strflocaltime("%d-%m-%Y ---- %H:%M"))}]}
               | select(.transfers | length > 0)
-              | .transfers[] + {timestamp}
+              | .transfers[]
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
-              | {timestamp, transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W) | {amount: .tokenAmount}]}
+              | {timestamp, transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W) | {amount: .tokenAmount, timestamp: (.timestamp | strflocaltime("%d-%m-%Y ---- %H:%M"))}]}
               | select(.transfers | length > 0)
-              | .transfers[] + {timestamp}
+              | .transfers[]
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
           cat <<EOF > data/status.json
