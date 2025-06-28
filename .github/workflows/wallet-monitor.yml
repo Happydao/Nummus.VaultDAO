@@ -78,7 +78,7 @@ jobs:
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.amount | tostring),
-                timestamp: (.timestamp | todateiso8601)
+                timestamp: .timestamp
               })')
 
           # === 4. Ultime 2 transazioni in entrata di TBTC su Wallet 2 ===
@@ -89,7 +89,7 @@ jobs:
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.amount | tostring),
-                timestamp: (.timestamp | todateiso8601)
+                timestamp: .timestamp
               })')
 
           # === 5. Scrivi JSON finale ===
