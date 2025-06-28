@@ -74,7 +74,7 @@ jobs:
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=20")
 
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            .transactions // [] | map(.tokenTransfers // [] | map(select(.mint == $M and .toUserAccount == $W))) | flatten
+            map(.tokenTransfers // [] | map(select(.mint == $M and .toUserAccount == $W))) | flatten
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.amount | tostring),
@@ -85,7 +85,7 @@ jobs:
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=20")
 
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            .transactions // [] | map(.tokenTransfers // [] | map(select(.mint == $M and .toUserAccount == $W))) | flatten
+            map(.tokenTransfers // [] | map(select(.mint == $M and .toUserAccount == $W))) | flatten
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.amount | tostring),
