@@ -15,56 +15,65 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install tools
-        run: sudo apt-get install -y jq bc
+        run: sudo apt-get update && sudo apt-get install -y jq bc curl
 
-      - name: Query balances and write status
+      - name: Query balances via getAssetsByOwner
         run: |
           mkdir -p data
 
-          API_KEY="$HELIUS_API_KEY"
+          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_NUMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
-          WALLET_1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
-          WALLET_2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          W1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+          W2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
 
-          fetch_balance() {
+          fetch_assets() {
             WALLET=$1
-            MINT=$2
-            RESPONSE=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/tokens?api-key=$API_KEY")
-            AMOUNT_RAW=$(echo "$RESPONSE" | jq -r --arg MINT "$MINT" '.[] | select(.mint == $MINT) | .amount')
-            DECIMALS=$(echo "$RESPONSE" | jq -r --arg MINT "$MINT" '.[] | select(.mint == $MINT) | .decimals')
-            if [[ "$AMOUNT_RAW" == "null" || -z "$AMOUNT_RAW" ]]; then
-              echo "0"
-            else
-              echo "scale=9; $AMOUNT_RAW / (10 ^ $DECIMALS)" | bc
-            fi
+            curl -s -X POST "$API" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
+                "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,"options":{"showFungible":true,"showZeroBalance":false}}
+              }'
           }
 
-          TBTC_BALANCE_1=$(fetch_balance "$WALLET_1" "$MINT_TBTC")
-          TBTC_BALANCE_2=$(fetch_balance "$WALLET_2" "$MINT_TBTC")
-          NUMUS_BALANCE=$(fetch_balance "$WALLET_1" "$MINT_NUMUS")
+          # Fetch
+          RESP1=$(fetch_assets $W1)
+          RESP2=$(fetch_assets $W2)
 
-          echo "NUMUS balance (wallet 1): $NUMUS_BALANCE"
-          echo "TBTC balance (wallet 1): $TBTC_BALANCE_1"
-          echo "TBTC balance (vault): $TBTC_BALANCE_2"
+          echo "📦 Wallet 1 response:"
+          echo "$RESP1" | jq '.result.items[] | {mint,amount,decimals}' || :
+
+          # Extract balances
+          bal() {
+            echo "$1" | jq -r --arg M "$2" '
+              (.result.items[] | select(.mint == $M) |
+                (.amount | tonumber) / (10 ^ (.decimals|tonumber))
+              ) // 0
+            '
+          }
+
+          TBTC1=$(bal "$RESP1" "$MINT_TBTC")
+          TBTC2=$(bal "$RESP2" "$MINT_TBTC")
+          NUMUS1=$(bal "$RESP1" "$MINT_NUMUS")
+
+          echo "Balances -> TBTC W1=$TBTC1, TBTC W2=$TBTC2, NUMUS W1=$NUMUS1"
 
           STATUS="swap_pending"
-          if (( $(echo "$TBTC_BALANCE_1 > 0" | bc -l) )); then
-            STATUS="awaiting_transfer"
-          fi
-          if (( $(echo "$TBTC_BALANCE_2 > 0" | bc -l) )); then
-            STATUS="transferred"
-          fi
+          if (( $(echo "$TBTC1 > 0" | bc -l) )); then STATUS="awaiting_transfer"; fi
+          if (( $(echo "$TBTC2 > 0" | bc -l) )); then STATUS="transferred"; fi
 
-          echo "{
-            \"status\": \"$STATUS\",
-            \"numus_balance\": \"$NUMUS_BALANCE\",
-            \"numus_wallet_tbtc\": \"$TBTC_BALANCE_1\",
-            \"vault_balance\": \"$TBTC_BALANCE_2\",
-            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-          }" > data/status.json
+          cat <<EOF > data/status.json
+          {
+            "status":"$STATUS",
+            "numus_balance":"$NUMUS1",
+            "numus_wallet_tbtc":"$TBTC1",
+            "vault_balance":"$TBTC2",
+            "timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
 
-      - name: Commit changes if any
+      - name: Commit if changed
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
