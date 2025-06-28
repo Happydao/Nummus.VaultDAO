@@ -22,14 +22,14 @@ jobs:
         run: |
           mkdir -p data
 
+          # === WALLET CONFIG ===
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_NUMMUS="9JK2u7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
-
           API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === WALLET 1 BALANCES ===
+          # === WALLET 1 BALANCE ===
           BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -44,19 +44,19 @@ jobs:
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
             .result.items[]? 
-            | select(.token_info.mint == $M) 
+            | select(.token_info.mint == $M)
             | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
             | "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
           TBTC_BAL_W1=${TBTC_BAL_W1:-"0.00000000"}
 
           NUMMUS_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_NUMMUS" '
             .result.items[]? 
-            | select(.token_info.mint == $M) 
+            | select(.token_info.mint == $M)
             | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
             | "\(.bal) \(.dec)"' | awk '{ printf "%.6f", $1 / (10 ^ $2) }')
           NUMMUS_BAL_W1=${NUMMUS_BAL_W1:-"0.000000"}
 
-          # === WALLET 2 BALANCES ===
+          # === WALLET 2 BALANCE ===
           BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -71,18 +71,19 @@ jobs:
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
             .result.items[]? 
-            | select(.token_info.mint == $M) 
+            | select(.token_info.mint == $M)
             | {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} 
             | "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
           TBTC_BAL_W2=${TBTC_BAL_W2:-"0.00000000"}
 
-          # === TRANSACTIONS ===
-          XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
-          XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
+          # === TRANSAZIONI ===
+          XFERS_W1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
+          XFERS_W2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
           echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
+          # === LAST 2 TBTC RECEIVED - WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
@@ -92,11 +93,12 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount | tonumber / 1e8
+                    | .tokenAmount.uiAmount
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
+          # === LAST 2 TBTC RECEIVED - WALLET 2 ===
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
@@ -106,12 +108,12 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount | tonumber / 1e8
+                    | .tokenAmount.uiAmount
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
-          # === WRITE OUTPUT ===
+          # === SCRITTURA FILE JSON ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --arg nummus1 "$NUMMUS_BAL_W1" \
