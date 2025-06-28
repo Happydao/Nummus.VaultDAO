@@ -76,15 +76,12 @@ jobs:
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
-              | {
-                  timestamp: .timestamp,
-                  transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W)]
-                }
-              | select(.transfers | length > 0)
-              | .transfers[]
+              | . as $tx
+              | .tokenTransfers[]
+              | select(.mint == $M and .toUserAccount == $W)
               | {
                   amount: (.rawTokenAmount.uiAmount // 0 | tostring),
-                  timestamp: (.timestamp // null | tostring)
+                  timestamp: ($tx.timestamp // null | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
@@ -94,15 +91,12 @@ jobs:
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
-              | {
-                  timestamp: .timestamp,
-                  transfers: [.tokenTransfers[] | select(.mint == $M and .toUserAccount == $W)]
-                }
-              | select(.transfers | length > 0)
-              | .transfers[]
+              | . as $tx
+              | .tokenTransfers[]
+              | select(.mint == $M and .toUserAccount == $W)
               | {
                   amount: (.rawTokenAmount.uiAmount // 0 | tostring),
-                  timestamp: (.timestamp // null | tostring)
+                  timestamp: ($tx.timestamp // null | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
