@@ -26,10 +26,10 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_NUMMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
+          SENDER="9R3BLNAWxJvk9wJUfAy7twAEeX7xcRgtzMGVhQ1tHuyZ"
 
           API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === 1. TBTC + NUMMUS Balance (Wallet 1) ===
           BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -52,7 +52,6 @@ jobs:
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.6f", $1 / (10 ^ $2) }')
 
-          # === 2. TBTC Balance (Vault Wallet 2) ===
           BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -70,22 +69,20 @@ jobs:
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
-          # === 3. Ultime 2 transazioni in entrata di TBTC su Wallet 1 ===
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" --arg S "$SENDER" '
             [ .[]
               | select(.tokenTransfers != null)
               | . as $tx
               | .tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W)
+              | select(.mint == $M and .toUserAccount == $W and .fromUserAccount == $S)
               | {
                   amount: .rawTokenAmount.uiAmountString,
                   timestamp: ($tx.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
-          # === 4. Ultime 2 transazioni in entrata di TBTC su Wallet 2 ===
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
@@ -100,7 +97,6 @@ jobs:
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
-          # === 5. Scrivi JSON finale ===
           cat <<EOF > data/status.json
           {
             "wallet_1": {
