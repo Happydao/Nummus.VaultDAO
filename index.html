@@ -18,7 +18,8 @@
       text-align: center;
       color: #ffd700;
       font-weight: 700;
-      margin-bottom: 2rem;
+      font-size: 2rem;
+      margin-bottom: 2.5rem;
     }
 
     .container {
@@ -29,46 +30,57 @@
     }
 
     .card {
-      background-color: rgba(30, 30, 30, 0.9);
-      border: 1px solid #555;
-      border-radius: 8px;
+      background-color: rgba(30, 30, 30, 0.92);
+      border: 2px solid #bba76f; /* bordo bronzo */
+      border-radius: 10px;
       padding: 1.5rem;
-      width: 340px;
-      box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+      width: 360px;
+      box-shadow:
+        0 0 12px rgba(255, 215, 0, 0.15),
+        0 0 5px rgba(255, 255, 200, 0.2),
+        inset 0 0 6px rgba(255, 255, 255, 0.05);
+      text-align: center;
+      transition: transform 0.2s ease;
     }
 
-    .card h2 {
-      color: #ffd700;
-      font-weight: 700;
-      font-size: 1.25rem;
-      margin-bottom: 0.3rem;
+    .card:hover {
+      transform: scale(1.01);
+      box-shadow:
+        0 0 20px rgba(255, 215, 0, 0.3),
+        0 0 8px rgba(255, 255, 200, 0.25),
+        inset 0 0 10px rgba(255, 255, 255, 0.08);
     }
 
-    .address-link {
+    .wallet-link {
       display: block;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-decoration: none;
       margin-bottom: 1rem;
-      color: #ccc;
-      font-size: 0.9rem;
-      text-decoration: underline;
     }
 
-    .transfers {
-      font-family: monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin-top: 1rem;
-      max-height: 300px;
-      overflow-y: auto;
+    .wallet-link:hover {
+      text-decoration: underline;
     }
 
     strong {
       font-weight: 700;
     }
 
+    .transfers {
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-top: 1.2rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
     #timestamp {
       text-align: center;
       font-size: 0.85rem;
-      margin-top: 2rem;
+      margin-top: 2.5rem;
       color: #aaa;
     }
   </style>
@@ -77,19 +89,19 @@
   <h1><strong>Nummus ↔ tBTC Monitor</strong></h1>
 
   <div class="container">
+    <!-- Swap Wallet -->
     <div class="card" id="swap-card">
-      <h2>tBTC Swap Wallet</h2>
-      <a class="address-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
-        AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B
+      <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
+        tBTC Swap Wallet
       </a>
       <p><strong>BALANCE:</strong> <span id="swap-balance">--</span> tBTC</p>
       <div class="transfers" id="swap-transfers">Loading transactions...</div>
     </div>
 
+    <!-- Vault Wallet -->
     <div class="card" id="vault-card">
-      <h2>Vault tBTC Nummus</h2>
-      <a class="address-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
-        HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s
+      <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
+        Vault tBTC Nummus
       </a>
       <p><strong>BALANCE:</strong> <span id="vault-balance">--</span> tBTC</p>
       <div class="transfers" id="vault-transfers">Loading last received...</div>
