@@ -73,8 +73,8 @@ jobs:
           # === 3. Ultime 2 transazioni in entrata di TBTC su Wallet 1 ===
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transfers?api-key=$HELIUS_API_KEY&limit=20")
 
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" '(.transfers // [])
-            | map(select(.token.mint == $M and .type == "transfer" and .destination == "$WALLET1"))
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '(.transfers // [])
+            | map(select(.token.mint == $M and .type == "transfer" and .destination == $W))
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.token.amount | tostring),
@@ -84,8 +84,8 @@ jobs:
           # === 4. Ultime 2 transazioni in entrata di TBTC su Wallet 2 ===
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transfers?api-key=$HELIUS_API_KEY&limit=20")
 
-          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" '(.transfers // [])
-            | map(select(.token.mint == $M and .type == "transfer" and .destination == "$WALLET2"))
+          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '(.transfers // [])
+            | map(select(.token.mint == $M and .type == "transfer" and .destination == $W))
             | sort_by(.timestamp) | reverse | .[:2]
             | map({
                 amount: (.token.amount | tostring),
