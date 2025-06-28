@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <title>Nummus → tBTC Monitor</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel&display=swap" rel="stylesheet">
   <style>
     body {
       background-color: #121212;
       color: #f0f0f0;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Cinzel', serif;
       margin: 0;
       padding: 2rem;
     }
     h1 {
       text-align: center;
       color: #ffd700;
+      margin-bottom: 2rem;
     }
     .container {
       display: flex;
@@ -27,15 +30,28 @@
       border: 1px solid #333;
       border-radius: 8px;
       padding: 1.5rem;
-      width: 320px;
+      width: 360px;
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
     }
     .card h2 {
       color: #00ffd5;
+      margin: 0.5rem 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .address {
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .address a {
+      color: #8888ff;
+      text-decoration: none;
+      word-break: break-all;
     }
     .transfers {
       font-family: monospace;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       line-height: 1.4;
       margin-top: 1rem;
       max-height: 300px;
@@ -53,15 +69,27 @@
   <h1>Nummus ↔ tBTC Monitor</h1>
 
   <div class="container">
+    <!-- Swap Wallet -->
     <div class="card" id="swap-card">
-      <h2>Swap Wallet</h2>
-      <p><strong>tBTC balance:</strong> <span id="swap-balance">--</span></p>
+      <div class="address">
+        Address: <a href="https://solscan.io/address/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
+          AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B
+        </a>
+      </div>
+      <h2>tBTC Swap Wallet</h2>
+      <p><strong>BALANCE:</strong> <span id="swap-balance">--</span> tBTC</p>
       <div class="transfers" id="swap-transfers">Loading transactions...</div>
     </div>
 
+    <!-- Vault Wallet -->
     <div class="card" id="vault-card">
-      <h2>Vault – tBTC of Nummus Aeternitas</h2>
-      <p><strong>tBTC balance:</strong> <span id="vault-balance">--</span></p>
+      <div class="address">
+        Address: <a href="https://solscan.io/address/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
+          HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s
+        </a>
+      </div>
+      <h2>Vault tBTC Nummus Aeternitas</h2>
+      <p><strong>BALANCE:</strong> <span id="vault-balance">--</span> tBTC</p>
       <div class="transfers" id="vault-transfers">Loading last received...</div>
     </div>
   </div>
