@@ -42,7 +42,7 @@ jobs:
           }')
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
+            .result.items[]? | select(.token_info.mint == $M) |
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
@@ -60,7 +60,7 @@ jobs:
           }')
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
+            .result.items[]? | select(.token_info.mint == $M) |
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
@@ -71,17 +71,20 @@ jobs:
           echo "$XFERS_W1" | jq '.[0:30] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === PARSE LAST 30 TBTC RECEIVED FOR WALLET 1 ===
+          # === PARSE LAST 30 TBTC IN/OUT FOR WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
-              | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
+              | .tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
               | {
                   timestamp: (.timestamp | todateiso8601),
                   amount: (
-                    .tokenTransfers[]
-                    | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount.uiAmount | tostring)
+                    else
+                      "-" + (.tokenAmount.uiAmount | tostring)
+                    end
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:30]')
@@ -96,7 +99,7 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    | .tokenAmount.uiAmount
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
@@ -111,7 +114,7 @@ jobs:
             '{
               wallet_1: {
                 tbtc_balance: $tbtc1,
-                last_tbtc_received: $last1
+                last_tbtc_transfers: $last1
               },
               vault_wallet_2: {
                 tbtc_balance: $tbtc2,
