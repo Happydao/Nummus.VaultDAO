@@ -17,7 +17,7 @@ jobs:
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y jq bc curl
 
-      - name: Query balances via getAssetsByOwner
+      - name: Query balances using getAssetsByOwner
         run: |
           mkdir -p data
 
@@ -37,43 +37,48 @@ jobs:
               }'
           }
 
-          # Fetch
+          extract_balance() {
+            RESPONSE="$1"
+            MINT="$2"
+            echo "$RESPONSE" | jq -e '.result.items' > /dev/null 2>&1 || { echo "0"; return; }
+
+            echo "$RESPONSE" | jq -r --arg M "$MINT" '
+              .result.items[]? | select(.mint == $M) |
+              (.ownership.fungible.amount | tonumber) / (10 ^ (.token_info.decimals | tonumber))
+            ' || echo "0"
+          }
+
+          # Get responses
           RESP1=$(fetch_assets $W1)
           RESP2=$(fetch_assets $W2)
 
-          echo "📦 Wallet 1 response:"
-          echo "$RESP1" | jq '.result.items[] | {mint,amount,decimals}' || :
+          # Extract balances with fallback
+          TBTC1=$(extract_balance "$RESP1" "$MINT_TBTC")
+          TBTC2=$(extract_balance "$RESP2" "$MINT_TBTC")
+          NUMUS1=$(extract_balance "$RESP1" "$MINT_NUMUS")
 
-          # Extract balances
-          bal() {
-            echo "$1" | jq -r --arg M "$2" '
-              (.result.items[] | select(.mint == $M) |
-                (.amount | tonumber) / (10 ^ (.decimals|tonumber))
-              ) // 0
-            '
-          }
+          echo "Balances:"
+          echo "  🪙 TBTC wallet 1: $TBTC1"
+          echo "  🪙 TBTC vault:    $TBTC2"
+          echo "  🪙 NUMUS wallet:  $NUMUS1"
 
-          TBTC1=$(bal "$RESP1" "$MINT_TBTC")
-          TBTC2=$(bal "$RESP2" "$MINT_TBTC")
-          NUMUS1=$(bal "$RESP1" "$MINT_NUMUS")
-
-          echo "Balances -> TBTC W1=$TBTC1, TBTC W2=$TBTC2, NUMUS W1=$NUMUS1"
-
+          # Status logic
           STATUS="swap_pending"
           if (( $(echo "$TBTC1 > 0" | bc -l) )); then STATUS="awaiting_transfer"; fi
           if (( $(echo "$TBTC2 > 0" | bc -l) )); then STATUS="transferred"; fi
 
+          # Write JSON output
           cat <<EOF > data/status.json
           {
-            "status":"$STATUS",
-            "numus_balance":"$NUMUS1",
-            "numus_wallet_tbtc":"$TBTC1",
-            "vault_balance":"$TBTC2",
-            "timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            "status": "$STATUS",
+            "numus_balance": "$NUMUS1",
+            "numus_wallet_tbtc": "$TBTC1",
+            "vault_balance": "$TBTC2",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOF
 
-      - name: Commit if changed
+      - name: Commit changes if any
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
