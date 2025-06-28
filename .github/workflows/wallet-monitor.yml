@@ -14,44 +14,62 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install tools
+        run: sudo apt-get install -y jq bc
+
       - name: Query token balances and write status
         run: |
           mkdir -p data
 
-          TBTC_MINT="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+          MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+          MINT_NUMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
+
           WALLET_1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET_2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           API_KEY="$HELIUS_API_KEY"
 
-          get_balance() {
+          fetch_balance() {
             local WALLET=$1
+            local MINT=$2
             curl -s "https://api.helius.xyz/v0/addresses/$WALLET/tokens?api-key=$API_KEY" | \
-            jq -r --arg MINT "$TBTC_MINT" '.[] | select(.mint == $MINT) | (.amount | tonumber) / (10 ^ (.decimals | tonumber))' || echo 0
+            jq -r --arg MINT "$MINT" '
+              [ .[] | select(.mint == $MINT) | 
+                (.amount | tonumber) / (10 ^ (.decimals | tonumber))
+              ] | add // 0
+            '
           }
 
-          BALANCE_1=$(get_balance $WALLET_1)
-          BALANCE_2=$(get_balance $WALLET_2)
+          TBTC_BALANCE_1=$(fetch_balance $WALLET_1 $MINT_TBTC)
+          TBTC_BALANCE_2=$(fetch_balance $WALLET_2 $MINT_TBTC)
+          NUMUS_BALANCE=$(fetch_balance $WALLET_1 $MINT_NUMUS)
 
-          # Determina lo stato
+          echo "NUMUS balance (wallet 1): $NUMUS_BALANCE"
+          echo "TBTC balance (wallet 1): $TBTC_BALANCE_1"
+          echo "TBTC balance (vault): $TBTC_BALANCE_2"
+
+          # Determina lo stato logico
           STATUS="swap_pending"
-          if (( $(echo "$BALANCE_1 > 0" | bc -l) )); then
+          if (( $(echo "$TBTC_BALANCE_1 > 0" | bc -l) )); then
             STATUS="awaiting_transfer"
           fi
-          if (( $(echo "$BALANCE_2 > 0" | bc -l) )); then
+          if (( $(echo "$TBTC_BALANCE_2 > 0" | bc -l) )); then
             STATUS="transferred"
           fi
 
-          echo "Wallet 1 TBTC: $BALANCE_1"
-          echo "Wallet 2 TBTC: $BALANCE_2"
-          echo "Status: $STATUS"
-
-          # Scrive il file JSON
+          # Scrivi file JSON
           echo "{
             \"status\": \"$STATUS\",
-            \"numus_balance\": \"$BALANCE_1\",
-            \"vault_balance\": \"$BALANCE_2\",
+            \"numus_balance\": \"$NUMUS_BALANCE\",
+            \"numus_wallet_tbtc\": \"$TBTC_BALANCE_1\",
+            \"vault_balance\": \"$TBTC_BALANCE_2\",
             \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
           }" > data/status.json
+
+      - name: Commit changes if any
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git diff --quiet || (git add data/status.json && git commit -m "Update status" && git push)
 
       - name: Commit changes if any
         run: |
