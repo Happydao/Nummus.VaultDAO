@@ -79,7 +79,7 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: (.rawTokenAmount.uiAmount | tostring),
+                  amount: (.rawTokenAmount.uiAmount // 0 | tostring),
                   timestamp: (.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
@@ -93,7 +93,7 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  amount: (.rawTokenAmount.uiAmount | tostring),
+                  amount: (.rawTokenAmount.uiAmount // 0 | tostring),
                   timestamp: (.timestamp | tostring)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
