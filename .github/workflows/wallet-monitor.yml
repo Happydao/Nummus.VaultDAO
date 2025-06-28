@@ -77,13 +77,13 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  raw_amount: (.rawTokenAmount.amount | tonumber),
-                  decimals: (.rawTokenAmount.decimals | tonumber),
+                  raw: .rawTokenAmount.amount,
+                  dec: .rawTokenAmount.decimals,
                   timestamp: ($tx.timestamp | tonumber)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
               map({
-                amount: ((.raw_amount) / (10 ^ .decimals)),
+                amount: ( (.raw | tonumber) / (10 ^ (.dec | tonumber)) ),
                 timestamp: (.timestamp | todate)
               })')
 
@@ -96,13 +96,13 @@ jobs:
               | .tokenTransfers[]
               | select(.mint == $M and .toUserAccount == $W)
               | {
-                  raw_amount: (.rawTokenAmount.amount | tonumber),
-                  decimals: (.rawTokenAmount.decimals | tonumber),
+                  raw: .rawTokenAmount.amount,
+                  dec: .rawTokenAmount.decimals,
                   timestamp: ($tx.timestamp | tonumber)
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]' | jq -c '
               map({
-                amount: ((.raw_amount) / (10 ^ .decimals)),
+                amount: ( (.raw | tonumber) / (10 ^ (.dec | tonumber)) ),
                 timestamp: (.timestamp | todate)
               })')
 
@@ -126,3 +126,4 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git diff --quiet || (git add data/status.json && git commit -m "Update balances and transfers" && git push)
+          
