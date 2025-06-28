@@ -2,148 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NUMUS ↔ TBTC Monitor</title>
+  <title>Nummus → tBTC Monitor</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     body {
-      font-family: sans-serif;
-      background: #f8f9fa;
-      color: #222;
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 2rem;
     }
     h1 {
       text-align: center;
-      color: #2c3e50;
+      color: #ffd700;
     }
     .container {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 2rem;
-      margin-top: 2rem;
     }
     .card {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 0.5rem;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
       padding: 1.5rem;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      width: 320px;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .card h2 {
+      color: #00ffd5;
+    }
+    .transfers {
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
       margin-top: 1rem;
-    }
-    th, td {
-      padding: 0.5rem;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-      font-size: 0.95rem;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    .positive {
-      color: green;
-    }
-    .negative {
-      color: red;
+      max-height: 300px;
+      overflow-y: auto;
     }
     #timestamp {
-      margin-top: 2rem;
       text-align: center;
-      font-size: 0.9rem;
-      color: #666;
+      font-size: 0.85rem;
+      margin-top: 2rem;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <h1>NUMUS ↔ TBTC Monitor</h1>
+  <h1>Nummus ↔ tBTC Monitor</h1>
 
   <div class="container">
-    <div class="card">
-      <h2>NUMUS Wallet</h2>
-      <p><strong>TBTC balance:</strong> <span id="tbtc-balance-w1">--</span></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody id="wallet1-transfers">
-          <tr><td colspan="2">Loading...</td></tr>
-        </tbody>
-      </table>
+    <div class="card" id="swap-card">
+      <h2>Swap Wallet</h2>
+      <p><strong>tBTC balance:</strong> <span id="swap-balance">--</span></p>
+      <div class="transfers" id="swap-transfers">Loading transactions...</div>
     </div>
 
-    <div class="card">
-      <h2>Vault Wallet (Bolt)</h2>
-      <p><strong>TBTC balance:</strong> <span id="tbtc-balance-w2">--</span></p>
-      <table>
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody id="wallet2-transfers">
-          <tr><td colspan="2">Loading...</td></tr>
-        </tbody>
-      </table>
+    <div class="card" id="vault-card">
+      <h2>Vault – tBTC of Nummus Aeternitas</h2>
+      <p><strong>tBTC balance:</strong> <span id="vault-balance">--</span></p>
+      <div class="transfers" id="vault-transfers">Loading last received...</div>
     </div>
   </div>
 
-  <p id="timestamp">Updating...</p>
+  <p id="timestamp">⏳ Loading...</p>
 
   <script>
-    async function loadData() {
-      try {
-        const res = await fetch('data/status.json');
-        const data = await res.json();
+    fetch('data/status.json')
+      .then(res => res.json())
+      .then(data => {
+        // Wallet 1 (Swap Wallet)
+        document.getElementById('swap-balance').textContent = data.wallet_1.tbtc_balance || '0.00000000';
+        const transfers1 = data.wallet_1.last_tbtc_transfers || [];
+        const swapTransfersEl = document.getElementById('swap-transfers');
+        swapTransfersEl.innerHTML = transfers1.length
+          ? transfers1.map(t =>
+              `<div>${t.timestamp} — <span style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</span></div>`
+            ).join('')
+          : 'No transactions found.';
 
-        // Wallet 1 balance
-        document.getElementById('tbtc-balance-w1').textContent = data.wallet_1.tbtc_balance || '0.00000000';
+        // Wallet 2 (Vault)
+        document.getElementById('vault-balance').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
+        const transfers2 = data.vault_wallet_2.last_tbtc_received || [];
+        const vaultTransfersEl = document.getElementById('vault-transfers');
+        vaultTransfersEl.innerHTML = transfers2.length
+          ? transfers2.map(t =>
+              `<div>${t.timestamp} — <span style="color:#0f0">+${t.amount}</span></div>`
+            ).join('')
+          : 'No incoming transfers.';
 
-        // Wallet 1 transfers
-        const tbody1 = document.getElementById('wallet1-transfers');
-        tbody1.innerHTML = '';
-        data.wallet_1.last_tbtc_transfers.forEach(tx => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${tx.timestamp}</td>
-            <td class="${tx.amount.startsWith('+') ? 'positive' : 'negative'}">${tx.amount}</td>
-          `;
-          tbody1.appendChild(row);
-        });
-
-        // Wallet 2 balance
-        document.getElementById('tbtc-balance-w2').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
-
-        // Wallet 2 transfers
-        const tbody2 = document.getElementById('wallet2-transfers');
-        tbody2.innerHTML = '';
-        data.vault_wallet_2.last_tbtc_received.forEach(tx => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${tx.timestamp}</td>
-            <td class="positive">+${tx.amount}</td>
-          `;
-          tbody2.appendChild(row);
-        });
-
-        // Global timestamp
-        document.getElementById('timestamp').textContent = 'Updated at: ' + data.timestamp;
-      } catch (err) {
-        document.getElementById('timestamp').textContent = 'Error loading data.';
-        console.error(err);
-      }
-    }
-
-    loadData();
+        // Timestamp
+        document.getElementById('timestamp').textContent = 'Last update: ' + data.timestamp;
+      })
+      .catch(err => {
+        document.getElementById('timestamp').textContent = '⚠️ Failed to load data';
+        console.error('Error loading status.json', err);
+      });
   </script>
 </body>
 </html>
