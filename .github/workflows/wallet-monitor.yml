@@ -1,1 +1,55 @@
+name: Monitor Wallets
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Fetch wallet states via Helius
+        run: |
+          mkdir -p data
+
+          SWAP_WALLET="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+          VAULT_WALLET="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          API_KEY="$HELIUS_API_KEY"
+
+          # Chiedi ultimi 20 tx del wallet di swap
+          curl -s "https://api.helius.xyz/v0/addresses/$SWAP_WALLET/transactions?api-key=$API_KEY&limit=20" > data/swap-tx.json
+
+          # Chiedi ultimi 10 tx del vault
+          curl -s "https://api.helius.xyz/v0/addresses/$VAULT_WALLET/transactions?api-key=$API_KEY&limit=10" > data/vault-tx.json
+
+          # Placeholder semplice per ora
+          # Logica più fine si aggiunge nel prossimo step
+          STATUS="swap_pending"
+
+          if grep -q "TBTC" data/swap-tx.json; then
+            STATUS="awaiting_transfer"
+          fi
+
+          if grep -q "TBTC" data/vault-tx.json; then
+            STATUS="transferred"
+          fi
+
+          echo "Status: $STATUS"
+
+          echo '{
+            "status": "'$STATUS'",
+            "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+          }' > data/status.json
+
+      - name: Commit changes if any
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git diff --quiet || (git add data/status.json && git commit -m "Update status" && git push)
 
