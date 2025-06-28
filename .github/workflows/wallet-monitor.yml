@@ -2,7 +2,7 @@ name: Monitor Wallets and Balances
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'  # ogni 5 minuti
   workflow_dispatch:
 
 jobs:
@@ -11,32 +11,52 @@ jobs:
     env:
       HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install tools
+      - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y jq bc curl
 
-      - name: Query balances using getAssetsByOwner
+      - name: Fetch balances from Helius
         run: |
           mkdir -p data
 
-          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
+          API_URL="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_NUMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
-          W1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
-          W2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          WALLET_1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+          WALLET_2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
 
+          # Funzione per fare la richiesta API
           fetch_assets() {
             WALLET=$1
-            curl -s -X POST "$API" \
+            curl -s -X POST "$API_URL" \
               -H "Content-Type: application/json" \
               -d '{
-                "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-                "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,"options":{"showFungible":true,"showZeroBalance":false}}
+                "jsonrpc":"2.0",
+                "id":"1",
+                "method":"getAssetsByOwner",
+                "params":{
+                  "ownerAddress":"'"$WALLET"'",
+                  "page":1,
+                  "limit":1000,
+                  "options":{
+                    "showFungible":true,
+                    "showZeroBalance":false
+                  }
+                }
               }'
           }
 
+          # Esegui le richieste per entrambi i wallet
+          RESP1=$(fetch_assets "$WALLET_1")
+          RESP2=$(fetch_assets "$WALLET_2")
+
+          # Salva le risposte per debug
+          echo "$RESP1" > data/wallet1_raw.json
+          echo "$RESP2" > data/wallet2_raw.json
+
+          # Funzione per estrarre balance di uno specifico mint
           extract_balance() {
             RESPONSE="$1"
             MINT="$2"
@@ -45,41 +65,34 @@ jobs:
             echo "$RESPONSE" | jq -r --arg M "$MINT" '
               .result.items[]? | select(.mint == $M) |
               (.ownership.fungible.amount | tonumber) / (10 ^ (.token_info.decimals | tonumber))
-            ' || echo "0"
+            ' 2>/dev/null || echo "0"
           }
 
-          # Get responses
-          RESP1=$(fetch_assets $W1)
-          RESP2=$(fetch_assets $W2)
-
-          # Extract balances with fallback
+          # Estrai i balance da ogni wallet
           TBTC1=$(extract_balance "$RESP1" "$MINT_TBTC")
           TBTC2=$(extract_balance "$RESP2" "$MINT_TBTC")
           NUMUS1=$(extract_balance "$RESP1" "$MINT_NUMUS")
 
-          echo "Balances:"
-          echo "  🪙 TBTC wallet 1: $TBTC1"
-          echo "  🪙 TBTC vault:    $TBTC2"
-          echo "  🪙 NUMUS wallet:  $NUMUS1"
+          echo "💰 NUMUS balance (wallet 1): $NUMUS1"
+          echo "💰 TBTC balance (wallet 1): $TBTC1"
+          echo "💰 TBTC balance (vault):     $TBTC2"
 
-          # Status logic
+          # Determina lo stato
           STATUS="swap_pending"
           if (( $(echo "$TBTC1 > 0" | bc -l) )); then STATUS="awaiting_transfer"; fi
           if (( $(echo "$TBTC2 > 0" | bc -l) )); then STATUS="transferred"; fi
 
-          # Write JSON output
-          cat <<EOF > data/status.json
-          {
-            "status": "$STATUS",
-            "numus_balance": "$NUMUS1",
-            "numus_wallet_tbtc": "$TBTC1",
-            "vault_balance": "$TBTC2",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
+          # Crea lo status.json finale
+          echo "{
+            \"status\": \"$STATUS\",
+            \"numus_balance\": \"$NUMUS1\",
+            \"numus_wallet_tbtc\": \"$TBTC1\",
+            \"vault_balance\": \"$TBTC2\",
+            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+          }" > data/status.json
 
-      - name: Commit changes if any
+      - name: Commit updated status if changed
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/status.json && git commit -m "Update status" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update wallet status" && git push)
