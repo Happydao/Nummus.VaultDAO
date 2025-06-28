@@ -71,31 +71,34 @@ jobs:
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
-          # Debug: salva ultime 10 transazioni
           echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W)
+              | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
               | {
-                  amount: .tokenAmount,
-                  timestamp: ($tx.timestamp | fromdate | strftime("%d-%m-%Y ---- %H:%M"))
+                  timestamp: (.timestamp | fromdate | strftime("%d-%m-%Y ---- %H:%M")),
+                  amount: (
+                    .tokenTransfers[]
+                    | select(.mint == $M and .toUserAccount == $W)
+                    | .tokenAmount
+                  )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and .toUserAccount == $W)
+              | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
               | {
-                  amount: .tokenAmount,
-                  timestamp: ($tx.timestamp | fromdate | strftime("%d-%m-%Y ---- %H:%M"))
+                  timestamp: (.timestamp | fromdate | strftime("%d-%m-%Y ---- %H:%M")),
+                  amount: (
+                    .tokenTransfers[]
+                    | select(.mint == $M and .toUserAccount == $W)
+                    | .tokenAmount
+                  )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
