@@ -1,22 +1,36 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f3f6f9;
+  color: #333;
   text-align: center;
-  margin-top: 60px;
-  background: #f0f2f5;
+  padding: 40px;
 }
 
-#status-box {
-  font-size: 2em;
+h1 {
+  margin-bottom: 40px;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.card {
   background: white;
-  display: inline-block;
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #ccc;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  width: 300px;
   transition: all 0.3s ease;
 }
 
+.card:hover {
+  transform: translateY(-5px);
+}
+
 #timestamp {
-  margin-top: 10px;
+  margin-top: 30px;
   color: #666;
 }
