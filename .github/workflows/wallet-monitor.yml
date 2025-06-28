@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 */2 * * *' 
   workflow_dispatch:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
 
           API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === WALLET 1 BALANCES ===
+          # === WALLET 1 BALANCE ===
           BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -42,11 +42,11 @@ jobs:
           }')
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
+            .result.items[]? | select(.token_info.mint == $M) |
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
-          # === WALLET 2 BALANCES ===
+          # === WALLET 2 BALANCE ===
           BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
             "jsonrpc":"2.0",
             "id":"1",
@@ -60,32 +60,36 @@ jobs:
           }')
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
+            .result.items[]? | select(.token_info.mint == $M) |
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
           # === TRANSACTIONS ===
-          XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=50")
+          XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=100")
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
 
-          echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W1" | jq '.[0:30] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === PARSE LAST 2 RECEIVED TBTC TRANSFERS ===
+          # === LAST 30 TBTC TXs (IN/OUT) FOR WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
             [ .[]
               | select(.tokenTransfers != null)
-              | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
+              | .tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
               | {
                   timestamp: (.timestamp | todateiso8601),
                   amount: (
-                    .tokenTransfers[]
-                    | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount.uiAmount | tostring)
+                    else
+                      "-" + (.tokenAmount.uiAmount | tostring)
+                    end
                   )
                 }
-            ] | sort_by(.timestamp) | reverse | .[:2]')
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
+          # === LAST 2 TBTC RECEIVED FOR WALLET 2 ===
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
@@ -95,12 +99,12 @@ jobs:
                   amount: (
                     .tokenTransfers[]
                     | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    | .tokenAmount.uiAmount
                   )
                 }
             ] | sort_by(.timestamp) | reverse | .[:2]')
 
-          # === WRITE STATUS.JSON SAFELY ===
+          # === WRITE status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
@@ -110,7 +114,7 @@ jobs:
             '{
               wallet_1: {
                 tbtc_balance: $tbtc1,
-                last_tbtc_received: $last1
+                last_tbtc_transfers: $last1
               },
               vault_wallet_2: {
                 tbtc_balance: $tbtc2,
