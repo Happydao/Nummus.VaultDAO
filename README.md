@@ -12,4 +12,5 @@ Auto-updates every hour (UTC)
 
 Governance
 The Nummus Aeternitas Vault DAO is a decentralized vault governed via on-chain voting.
+
 Voting on Realms: https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp
