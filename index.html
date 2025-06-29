@@ -33,14 +33,18 @@
     }
 
     .title-wrapper {
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    .title-wrapper img {
-      height: 28px;
+    .title-wrapper img.token-logo {
+      height: 32px;
+      width: 32px;
       vertical-align: middle;
-      margin: 0 6px;
     }
 
     h1 {
@@ -53,7 +57,7 @@
     .subtitle {
       text-align: center;
       color: #d4c89f;
-      font-size: 1rem;
+      font-size: 1.5rem;
       margin-bottom: 2rem;
       font-weight: 600;
     }
@@ -133,14 +137,10 @@
     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
   </a>
 
-  <!-- Title -->
+  <!-- Title with logo and text -->
   <div class="title-wrapper">
-    <h1>
-      <img src="images/nummus.png" alt="$NUMMUS" />
-      $NUMMUS →
-      <img src="images/tbtc.png" alt="tBTC" />
-      tBTC
-    </h1>
+    <img src="images/LOGOnummus.200X200.png" class="token-logo" alt="Nummus logo" />
+    <h1>$NUMMUS → tBTC</h1>
   </div>
   <div class="subtitle">Monitor</div>
 
