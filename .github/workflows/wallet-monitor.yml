@@ -66,10 +66,10 @@ jobs:
 
           # === TRANSACTIONS ===
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=100")
-          XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=50")
+          XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=100")
 
           echo "$XFERS_W1" | jq '.[0:30] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
+          echo "$XFERS_W2" | jq '.[0:30] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
           # === LAST 30 tBTC TRANSFERS (IN/OUT) WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
@@ -90,21 +90,24 @@ jobs:
                 }
             ] | sort_by(.timestamp) | reverse | .[:30]')
 
-          # === LAST 2 RECEIVED tBTC TRANSFERS WALLET 2 ===
+          # === LAST 30 tBTC TRANSFERS (IN/OUT) WALLET 2 ===
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
             [ .[]
               | select(.tokenTransfers != null)
               | . as $tx
-              | select(any(.tokenTransfers[]; .mint == $M and .toUserAccount == $W))
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
               | {
                   timestamp: ($tx.timestamp | todateiso8601),
                   amount: (
-                    .tokenTransfers[]
-                    | select(.mint == $M and .toUserAccount == $W)
-                    | .tokenAmount
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
                   )
                 }
-            ] | sort_by(.timestamp) | reverse | .[:2]')
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
           # === WRITE STATUS.JSON ===
           jq -n \
@@ -120,7 +123,7 @@ jobs:
               },
               vault_wallet_2: {
                 tbtc_balance: $tbtc2,
-                last_tbtc_received: $last2
+                last_tbtc_transfers: $last2
               },
               timestamp: $time
             }' > data/status.json
