@@ -12,6 +12,7 @@
       font-family: 'Cinzel', serif;
       margin: 0;
       padding: 2rem;
+      position: relative;
     }
 
     h1 {
@@ -20,6 +21,23 @@
       font-weight: 700;
       font-size: 2rem;
       margin-bottom: 2.5rem;
+    }
+
+    .github-logo {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .github-logo img {
+      width: 32px;
+      height: 32px;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+
+    .github-logo img:hover {
+      opacity: 1;
     }
 
     .container {
@@ -66,7 +84,7 @@
 
     .balance,
     .transfers {
-      text-align: left; /* ✅ Modifica: sinistro */
+      text-align: left;
     }
 
     strong {
@@ -91,6 +109,13 @@
   </style>
 </head>
 <body>
+
+  <!-- GitHub Logo -->
+  <a class="github-logo" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" title="View on GitHub">
+    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
+  </a>
+
+  <!-- Page Title -->
   <h1><strong>$NUMMUS → tBTC Monitor</strong></h1>
 
   <div class="container">
@@ -106,7 +131,7 @@
     <!-- Vault Wallet -->
     <div class="card" id="vault-card">
       <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
-        Vault tBTC Nummus
+        Nummus Aeternitas Vault DAO
       </a>
       <p class="balance"><strong>BALANCE:</strong> <strong><span id="vault-balance">--</span></strong> tBTC</p>
       <div class="transfers" id="vault-transfers">Loading last received...</div>
@@ -150,3 +175,4 @@
   </script>
 </body>
 </html>
+
