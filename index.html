@@ -96,8 +96,7 @@
       font-size: 0.9rem;
       line-height: 1.5;
       margin-top: 1.2rem;
-      /* ✅ Mostra tutte le transazioni */
-      max-height: none;
+      max-height: none;  /* ✅ Mostra tutte */
       overflow-y: visible;
     }
 
@@ -135,11 +134,11 @@
         Nummus Aeternitas Vault DAO
       </a>
       <p class="balance"><strong>BALANCE:</strong> <strong><span id="vault-balance">--</span></strong> tBTC</p>
-      <div class="transfers" id="vault-transfers">Loading last received...</div>
+      <div class="transfers" id="vault-transfers">Loading transactions...</div>
     </div>
   </div>
 
-  <p id="timestamp">⏳ Loading... (updates every 2 hours)</p>
+  <p id="timestamp">⏳ Loading... (updates every hour)</p>
 
   <script>
     fetch('data/status.json')
@@ -155,19 +154,19 @@
             ).join('')
           : 'No transactions found.';
 
-        // Wallet 2 (Vault)
+        // Wallet 2 (Vault) — ora IN & OUT
         document.getElementById('vault-balance').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
-        const transfers2 = data.vault_wallet_2.last_tbtc_received || [];
+        const transfers2 = data.vault_wallet_2.last_tbtc_transfers || [];
         const vaultTransfersEl = document.getElementById('vault-transfers');
         vaultTransfersEl.innerHTML = transfers2.length
           ? transfers2.map(t =>
-              `<div>${t.timestamp} — <strong style="color:#0f0">+${t.amount}</strong></div>`
+              `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`
             ).join('')
-          : 'No incoming transfers.';
+          : 'No transactions found.';
 
         // Timestamp
         document.getElementById('timestamp').textContent =
-          'Last update: ' + data.timestamp + ' (updates every 2 hours)';
+          'Last update: ' + data.timestamp + ' (updates every hour)';
       })
       .catch(err => {
         document.getElementById('timestamp').textContent = '⚠️ Failed to load data';
