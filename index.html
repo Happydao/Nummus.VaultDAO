@@ -96,7 +96,7 @@
       font-size: 0.9rem;
       line-height: 1.5;
       margin-top: 1.2rem;
-      max-height: none;  /* ✅ Mostra tutte */
+      max-height: none;
       overflow-y: visible;
     }
 
@@ -154,7 +154,7 @@
             ).join('')
           : 'No transactions found.';
 
-        // Wallet 2 (Vault) — ora IN & OUT
+        // Wallet 2 (Vault) — now IN & OUT
         document.getElementById('vault-balance').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
         const transfers2 = data.vault_wallet_2.last_tbtc_transfers || [];
         const vaultTransfersEl = document.getElementById('vault-transfers');
