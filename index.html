@@ -19,13 +19,13 @@
       text-align: center;
       color: #ffd700;
       font-weight: 700;
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+      font-size: 2.6rem; /* ✅ aumentato del 30% */
+      margin-bottom: 0.3rem;
     }
 
     .subtitle {
       text-align: center;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       margin-bottom: 2.5rem;
       color: #c9b77d;
     }
@@ -53,9 +53,9 @@
     }
 
     .logos img {
-      height: 40px;
+      height: 64px; /* ✅ ingrandito da 48px */
       vertical-align: middle;
-      margin: 0 8px;
+      margin: 0 10px;
     }
 
     .container {
@@ -140,9 +140,9 @@
 
   <!-- Token Logos and Title -->
   <div class="logos">
-    <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS" style="height:48px;">
-    <span style="font-size: 1.5rem; font-weight: bold; color: #ffd700;">$NUMMUS → tBTC</span>
-    <img src="images/tbtc.png" alt="tBTC" style="height:48px;">
+    <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
+    <span style="font-size: 2rem; font-weight: bold; color: #ffd700;">$NUMMUS → tBTC</span>
+    <img src="images/tbtc.png" alt="tBTC">
   </div>
   <div class="subtitle">Monitor</div>
 
@@ -172,7 +172,7 @@
     fetch('data/status.json')
       .then(res => res.json())
       .then(data => {
-        // Wallet 1
+        // Wallet 1 (Swap)
         document.getElementById('swap-balance').textContent = data.wallet_1.tbtc_balance || '0.00000000';
         const transfers1 = data.wallet_1.last_tbtc_transfers || [];
         const swapTransfersEl = document.getElementById('swap-transfers');
@@ -182,7 +182,7 @@
             ).join('')
           : 'No transactions found.';
 
-        // Wallet 2
+        // Wallet 2 (Vault)
         document.getElementById('vault-balance').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
         const transfers2 = data.vault_wallet_2.last_tbtc_transfers || [];
         const vaultTransfersEl = document.getElementById('vault-transfers');
@@ -200,6 +200,5 @@
         console.error('Error loading status.json', err);
       });
   </script>
-
 </body>
 </html>
