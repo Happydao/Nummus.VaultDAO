@@ -35,7 +35,7 @@ jobs:
             "method":"getAssetsByOwner",
             "params":{
               "ownerAddress":"'"$WALLET1"'",
-              "page":1,
+              "page":2,
               "limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}
             }
@@ -53,7 +53,7 @@ jobs:
             "method":"getAssetsByOwner",
             "params":{
               "ownerAddress":"'"$WALLET2"'",
-              "page":1,
+              "page":2,
               "limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}
             }
