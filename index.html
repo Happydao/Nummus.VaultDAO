@@ -166,7 +166,7 @@
       .then(p => {
         document.getElementById('tbtc-price').innerHTML = `tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
         document.getElementById('nummus-price').innerHTML = `$NUMMUS: <strong>$${p.nummus_price_usd}</strong>`;
-        document.getElementById('total-info').textContent = `Total: ${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
+        document.getElementById('total-info').innerHTML = `<strong>Total:</strong> ${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
       });
 
     fetch('data/status.json')
