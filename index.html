@@ -24,8 +24,14 @@
     .subtitle {
       text-align: center;
       font-size: 1.4rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       color: #c9b77d;
+    }
+    .totalsum {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      color: #aaa;
     }
     .github-logo {
       position: absolute;
@@ -67,18 +73,12 @@
       border-radius: 10px;
       padding: 1.5rem;
       width: 360px;
-      box-shadow:
-        0 0 12px rgba(255, 215, 0, 0.15),
-        0 0 5px rgba(255, 255, 200, 0.2),
-        inset 0 0 6px rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.15), 0 0 5px rgba(255, 255, 200, 0.2), inset 0 0 6px rgba(255, 255, 255, 0.05);
       transition: transform 0.2s ease;
     }
     .card:hover {
       transform: scale(1.01);
-      box-shadow:
-        0 0 20px rgba(255, 215, 0, 0.3),
-        0 0 8px rgba(255, 255, 200, 0.25),
-        inset 0 0 10px rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), 0 0 8px rgba(255, 255, 200, 0.25), inset 0 0 10px rgba(255, 255, 255, 0.08);
     }
     .wallet-link {
       display: block;
@@ -92,8 +92,7 @@
     .wallet-link:hover {
       text-decoration: underline;
     }
-    .balance,
-    .transfers {
+    .balance, .transfers {
       text-align: left;
     }
     strong {
@@ -104,7 +103,6 @@
       font-size: 0.9rem;
       line-height: 1.5;
       margin-top: 1.2rem;
-      overflow-y: visible;
     }
     #timestamp {
       text-align: center;
@@ -133,7 +131,8 @@
     </div>
   </div>
 
-  <div class="subtitle" id="summary">Monitor</div>
+  <div class="subtitle">MONITOR</div>
+  <div class="totalsum" id="total-info">Loading total...</div>
 
   <div class="container">
     <div class="card" id="swap-card">
@@ -156,18 +155,12 @@
   <p id="timestamp">⏳ Loading... <span class="note">(updates every hour, UTC)</span></p>
 
   <script>
-    let prices = null;
-
     fetch('data/prices.json')
       .then(res => res.json())
       .then(p => {
-        prices = p;
-        // update header total
-        document.getElementById('summary').innerHTML = 
-          `Monitor — <strong>${p.total_tbtc_balance} tBTC</strong> (<strong>$${p.total_usd_value}</strong>)`;
-        // update logo price line
-        document.getElementById('token-prices').innerHTML = 
+        document.getElementById('token-prices').innerHTML =
           `$NUMMUS: <strong>$--</strong> | tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
+        document.getElementById('total-info').textContent = `${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
       });
 
     fetch('data/status.json')
@@ -176,6 +169,7 @@
         const b1 = data.wallet_1.tbtc_balance.toFixed(8);
         const v1 = data.wallet_1.tbtc_usd_value.toFixed(2);
         document.getElementById('swap-balance').textContent = `${b1} tBTC ($${v1})`;
+
         const t1 = data.wallet_1.last_tbtc_transfers || [];
         document.getElementById('swap-transfers').innerHTML = t1.length
           ? t1.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
@@ -184,6 +178,7 @@
         const b2 = data.vault_wallet_2.tbtc_balance.toFixed(8);
         const v2 = data.vault_wallet_2.tbtc_usd_value.toFixed(2);
         document.getElementById('vault-balance').textContent = `${b2} tBTC ($${v2})`;
+
         const t2 = data.vault_wallet_2.last_tbtc_transfers || [];
         document.getElementById('vault-transfers').innerHTML = t2.length
           ? t2.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
