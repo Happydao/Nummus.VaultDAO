@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,7 +27,6 @@ jobs:
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === Funzione: Calcola saldo tBTC per un wallet ===
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
@@ -49,7 +48,6 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
-          # === Funzione: Scarica fino a 5 pagine di transazioni ===
           fetch_transactions() {
             local WALLET=$1
             local ALL_TXS="[]"
@@ -73,61 +71,47 @@ jobs:
           echo "$XFERS_W1" > data/raw_wallet1.json
           echo "$XFERS_W2" > data/raw_wallet2.json
 
-          echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
+          echo "$XFERS_W1" | jq '.[0:20] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2" | jq '.[0:20] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          COMBINED_TXS=$(jq -s 'add' <<< "$XFERS_W1 $XFERS_W2")
-
-          # === Filtra tBTC per wallet 1 ===
-          LAST_TBTC_W1=$(echo "$COMBINED_TXS" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
-              | {
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: (
-                    if (.toUserAccount // "") == $W then
-                      "+" + (.tokenAmount | tostring)
-                    else
-                      "-" + (.tokenAmount | tostring)
-                    end
-                  )
+          parse_transfers() {
+            local DATA="$1"
+            local WALLET="$2"
+            local MINT="$3"
+            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" '
+              [ .[]
+                | select(.tokenTransfers != null)
+                | . as $tx
+                | $tx.tokenTransfers[]
+                | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
+                | {
+                    key: (
+                      (.mint // "") + "_" +
+                      (.tokenAmount | tostring) + "_" +
+                      ((.toUserAccount // "") == $W | tostring) + "_" +
+                      ($tx.signature // "")
+                    ),
+                    tx: {
+                      timestamp: ($tx.timestamp | todateiso8601),
+                      amount: (
+                        if (.toUserAccount // "") == $W then
+                          "+" + (.tokenAmount | tostring)
+                        else
+                          "-" + (.tokenAmount | tostring)
+                        end
+                      )
+                    }
                 }
-            ] | sort_by(.timestamp) | reverse | .[:30]')
+              ]
+              | unique_by(.key)
+              | map(.tx)
+              | sort_by(.timestamp)
+              | reverse
+              | .[:30]'
+          }
 
-          # === Filtra tBTC per wallet 2, rimuovi duplicati ===
-          LAST_TBTC_W2=$(echo "$COMBINED_TXS" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
-              | {
-                  key: (
-                    (.mint // "") + "_" +
-                    (.tokenAmount | tostring) + "_" +
-                    ((.toUserAccount // "") == $W | tostring) + "_" +
-                    ($tx.signature // "")
-                  ),
-                  tx: {
-                    timestamp: ($tx.timestamp | todateiso8601),
-                    amount: (
-                      if (.toUserAccount // "") == $W then
-                        "+" + (.tokenAmount | tostring)
-                      else
-                        "-" + (.tokenAmount | tostring)
-                      end
-                    )
-                  }
-              }
-            ] 
-            | unique_by(.key) 
-            | map(.tx)
-            | sort_by(.timestamp) 
-            | reverse 
-            | .[:30]')
+          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
+          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC")
 
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
