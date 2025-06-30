@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Ogni ora
+    - cron: '0 * * * *'  # Esegui ogni ora (UTC)
   workflow_dispatch:
 
 jobs:
@@ -18,19 +18,19 @@ jobs:
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y jq curl
 
-      - name: Fetch balances and transactions (2 pages)
+      - name: Fetch balances and transactions
         run: |
           mkdir -p data
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
+          API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === TBTC BALANCES ===
+          # === Get TBTC balances using getAssetsByOwner ===
           get_balance() {
             local WALLET=$1
-            curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
+            curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
               "jsonrpc":"2.0",
               "id":"1",
               "method":"getAssetsByOwner",
@@ -49,22 +49,27 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
-          # === TRANSACTIONS WITH PAGINATION (2 pages x 100 tx) ===
+          # === Fetch transactions with pagination (2 pages) ===
           fetch_transactions() {
             local WALLET=$1
             local OUT1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100")
-            local SIG=$(echo "$OUT1" | jq -r '.[-1].signature')
-            local OUT2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100&before=$SIG")
+            local SIG1=$(echo "$OUT1" | jq -r '.[-1].signature')
+            local OUT2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100&before=$SIG1")
             jq -s 'add' <<< "$OUT1 $OUT2"
           }
 
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
+          # === Save raw JSON ===
+          echo "$XFERS_W1" > data/raw_wallet1.json
+          echo "$XFERS_W2" > data/raw_wallet2.json
+
+          # === Save debug filtered JSON ===
           echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === PARSE LAST 30 TBTC TRANSFERS (IN/OUT) ===
+          # === Parse tBTC transfers (in/out) ===
           parse_transfers() {
             local DATA="$1"
             local WALLET="$2"
@@ -74,11 +79,11 @@ jobs:
                 | select(.tokenTransfers != null)
                 | . as $tx
                 | $tx.tokenTransfers[]
-                | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+                | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
                 | {
                     timestamp: ($tx.timestamp | todateiso8601),
                     amount: (
-                      if .toUserAccount == $W then
+                      if (.toUserAccount // "") == $W then
                         "+" + (.tokenAmount | tostring)
                       else
                         "-" + (.tokenAmount | tostring)
@@ -91,7 +96,7 @@ jobs:
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
           LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC")
 
-          # === WRITE STATUS FILE ===
+          # === Write status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
