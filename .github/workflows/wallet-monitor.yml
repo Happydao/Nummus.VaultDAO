@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora (UTC)
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -31,39 +31,27 @@ jobs:
 
           echo "📡 Fetching TBTC balances..."
 
-          # === WALLET 1 TBTC BALANCE ===
-          BAL_W1=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
-            "jsonrpc":"2.0",
-            "id":1,
-            "method":"getTokenAccountsByOwner",
-            "params":[
-              "'"$WALLET1"'",
-              { "mint": "'"$MINT_TBTC"'" },
-              { "encoding": "jsonParsed" }
-            ]
-          }')
+          get_balance() {
+            WALLET="$1"
+            BAL_JSON=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+              "jsonrpc":"2.0",
+              "id":1,
+              "method":"getTokenAccountsByOwner",
+              "params":[
+                "'"$WALLET"'",
+                { "mint": "'"$MINT_TBTC"'" },
+                { "encoding": "jsonParsed" }
+              ]
+            }')
 
-          TBTC_BAL_W1=$(echo "$BAL_W1" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
-            map(select(.amount != "0")) |
-            map((.amount | tonumber) / (10 | pow(.decimals | tonumber))) |
-            add // 0' | xargs printf "%.8f")
+            echo "$BAL_JSON" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
+              map(select(.amount != "0")) |
+              map((.amount | tonumber) / (10 ^ (.decimals | tonumber))) |
+              add // 0' | xargs printf "%.8f"
+          }
 
-          # === WALLET 2 TBTC BALANCE ===
-          BAL_W2=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
-            "jsonrpc":"2.0",
-            "id":1,
-            "method":"getTokenAccountsByOwner",
-            "params":[
-              "'"$WALLET2"'",
-              { "mint": "'"$MINT_TBTC"'" },
-              { "encoding": "jsonParsed" }
-            ]
-          }')
-
-          TBTC_BAL_W2=$(echo "$BAL_W2" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
-            map(select(.amount != "0")) |
-            map((.amount | tonumber) / (10 | pow(.decimals | tonumber))) |
-            add // 0' | xargs printf "%.8f")
+          TBTC_BAL_W1=$(get_balance "$WALLET1")
+          TBTC_BAL_W2=$(get_balance "$WALLET2")
 
           echo "🔁 Fetching transactions..."
 
@@ -75,45 +63,34 @@ jobs:
 
           echo "🧮 Parsing tBTC transfers..."
 
-          # === WALLET 1 LAST 30 tBTC TRANSFERS ===
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-              | {
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: (
-                    if .toUserAccount == $W then
-                      "+" + (.tokenAmount | tostring)
-                    else
-                      "-" + (.tokenAmount | tostring)
-                    end
-                  )
-                }
-            ] | sort_by(.timestamp) | reverse | .[:30]')
+          parse_transfers() {
+            WALLET="$1"
+            MINT="$2"
+            DATA="$3"
+            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" '
+              try (
+                [ .[]
+                  | select(.tokenTransfers != null)
+                  | . as $tx
+                  | $tx.tokenTransfers[]
+                  | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+                  | {
+                      timestamp: ($tx.timestamp | todateiso8601),
+                      amount: (
+                        if .toUserAccount == $W then
+                          "+" + (.tokenAmount | tostring)
+                        else
+                          "-" + (.tokenAmount | tostring)
+                        end
+                      )
+                    }
+                ] | sort_by(.timestamp) | reverse | .[:30]
+              ) catch []'
+          }
 
-          # === WALLET 2 LAST 30 tBTC TRANSFERS ===
-          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-              | {
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: (
-                    if .toUserAccount == $W then
-                      "+" + (.tokenAmount | tostring)
-                    else
-                      "-" + (.tokenAmount | tostring)
-                    end
-                  )
-                }
-            ] | sort_by(.timestamp) | reverse | .[:30]')
+          LAST_TBTC_W1=$(parse_transfers "$WALLET1" "$MINT_TBTC" "$XFERS_W1")
+          LAST_TBTC_W2=$(parse_transfers "$WALLET2" "$MINT_TBTC" "$XFERS_W2")
 
-          # DEBUG: stampa a video le ultime transazioni trovate
           echo "✅ WALLET 2 – Transazioni tBTC rilevate:"
           echo "$LAST_TBTC_W2" | jq '.'
 
