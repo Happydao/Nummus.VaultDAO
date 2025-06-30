@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # ⏱ Esegui ogni ora
+    - cron: '0 * * * *'  # ⏱ Runs every hour
   workflow_dispatch:
 
 jobs:
@@ -64,7 +64,11 @@ jobs:
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
-          # === TRANSACTIONS ===
+          # 💤 Delay to allow Helius to index tokenTransfers correctly
+          echo "Waiting 15 seconds to ensure token transfer indexing..."
+          sleep 15
+
+          # === FETCH TRANSACTIONS ===
           XFERS_W1=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=100")
           XFERS_W2=$(curl -s -X GET "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=100")
 
