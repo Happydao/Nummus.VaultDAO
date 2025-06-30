@@ -14,12 +14,20 @@
       padding: 2rem;
       position: relative;
     }
-    h1 {
-      text-align: center;
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    .header img {
+      height: 64px;
+    }
+    .title-text {
       color: #ffd700;
       font-weight: 700;
       font-size: 2.6rem;
-      margin-bottom: 0.2rem;
     }
     .subtitle {
       text-align: center;
@@ -47,15 +55,6 @@
     }
     .github-logo img:hover {
       opacity: 1;
-    }
-    .logos {
-      text-align: center;
-      margin-bottom: 0.3rem;
-    }
-    .logos img {
-      height: 64px;
-      vertical-align: middle;
-      margin: 0 10px;
     }
     .prices-under-logos {
       display: flex;
@@ -126,14 +125,13 @@
     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
   </a>
 
-  <h1>$NUMMUS → tBTC</h1>
-  <div class="subtitle">MONITOR</div>
-
-  <div class="logos">
+  <div class="header">
     <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
-    <span style="font-size: 2rem; font-weight: bold; color: #ffd700;"></span>
+    <div class="title-text">$NUMMUS → tBTC</div>
     <img src="images/tbtc.png" alt="tBTC">
   </div>
+
+  <div class="subtitle">MONITOR</div>
 
   <div class="prices-under-logos">
     <div id="nummus-price">$NUMMUS: <strong>$--</strong></div>
