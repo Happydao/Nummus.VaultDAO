@@ -1,10 +1,140 @@
-Run mkdir -p data
-📡 Fetching TBTC balances...
-jq: error: syntax error, unexpected INVALID_CHARACTER (Unix shell quoting issues?) at <top-level>, line 3:
-  map((.amount | tonumber) / (10 ^ (.decimals | tonumber))) |                                 
-jq: 1 compile error
-jq: error: syntax error, unexpected INVALID_CHARACTER (Unix shell quoting issues?) at <top-level>, line 3:
-  map((.amount | tonumber) / (10 ^ (.decimals | tonumber))) |                                 
-jq: 1 compile error
-🔁 Fetching transactions...
-Error: Process completed with exit code 6.
+name: Monitor Vault + Swap Events
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Esegui ogni ora (UTC)
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y jq curl
+
+      - name: Fetch balances and transfers
+        run: |
+          mkdir -p data
+
+          WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+          WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+
+          API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
+          API_REST="https://api.helius.xyz/v0"
+
+          echo "📡 Fetching TBTC balances..."
+
+          # === WALLET 1 TBTC BALANCE ===
+          BAL_W1=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"getTokenAccountsByOwner",
+            "params":[
+              "'"$WALLET1"'",
+              { "mint": "'"$MINT_TBTC"'" },
+              { "encoding": "jsonParsed" }
+            ]
+          }')
+
+          TBTC_BAL_W1=$(echo "$BAL_W1" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
+            map(select(.amount != "0")) |
+            map((.amount | tonumber) / (10 | pow(.decimals | tonumber))) |
+            add // 0' | xargs printf "%.8f")
+
+          # === WALLET 2 TBTC BALANCE ===
+          BAL_W2=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"getTokenAccountsByOwner",
+            "params":[
+              "'"$WALLET2"'",
+              { "mint": "'"$MINT_TBTC"'" },
+              { "encoding": "jsonParsed" }
+            ]
+          }')
+
+          TBTC_BAL_W2=$(echo "$BAL_W2" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
+            map(select(.amount != "0")) |
+            map((.amount | tonumber) / (10 | pow(.decimals | tonumber))) |
+            add // 0' | xargs printf "%.8f")
+
+          echo "🔁 Fetching transactions..."
+
+          XFERS_W1=$(curl -s "$API_REST/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          XFERS_W2=$(curl -s "$API_REST/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
+
+          echo "$XFERS_W1" | jq '.' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2" | jq '.' > data/debug_wallet2_transfers.json
+
+          echo "🧮 Parsing tBTC transfers..."
+
+          # === WALLET 1 LAST 30 tBTC TRANSFERS ===
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
+            [ .[]
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
+
+          # === WALLET 2 LAST 30 tBTC TRANSFERS ===
+          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
+            [ .[]
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
+
+          echo "💾 Writing status.json..."
+
+          jq -n \
+            --arg tbtc1 "$TBTC_BAL_W1" \
+            --argjson last1 "$LAST_TBTC_W1" \
+            --arg tbtc2 "$TBTC_BAL_W2" \
+            --argjson last2 "$LAST_TBTC_W2" \
+            --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              wallet_1: {
+                tbtc_balance: $tbtc1,
+                last_tbtc_transfers: $last1
+              },
+              vault_wallet_2: {
+                tbtc_balance: $tbtc2,
+                last_tbtc_transfers: $last2
+              },
+              timestamp: $time
+            }' > data/status.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers" && git push)
