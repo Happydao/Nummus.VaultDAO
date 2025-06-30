@@ -25,34 +25,43 @@ jobs:
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
+
+          API="https://api.helius.xyz/v1"
 
           echo "📡 Fetching balances..."
 
-          # === WALLET 1 BALANCE ===
-          BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
-            "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-            "params":{
-              "ownerAddress":"'"$WALLET1"'",
-              "page":1,"limit":1000,
-              "options":{"showFungible":true,"showZeroBalance":false}
-            }
-          }')
+          # === BALANCE WALLET 1 ===
+          BALANCE_W1=$(curl -s -X POST "$API/rpc?api-key=$HELIUS_API_KEY" \
+            -H "Content-Type: application/json" -d '{
+              "jsonrpc":"2.0",
+              "id":1,
+              "method":"getAssetsByOwner",
+              "params":{
+                "ownerAddress":"'"$WALLET1"'",
+                "page":1,
+                "limit":1000,
+                "options":{"showFungible":true,"showZeroBalance":false}
+              }
+            }')
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
             .result.items[]? | select(.id == $M) |
             {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
             "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
 
-          # === WALLET 2 BALANCE ===
-          BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
-            "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-            "params":{
-              "ownerAddress":"'"$WALLET2"'",
-              "page":1,"limit":1000,
-              "options":{"showFungible":true,"showZeroBalance":false}
-            }
-          }')
+          # === BALANCE WALLET 2 ===
+          BALANCE_W2=$(curl -s -X POST "$API/rpc?api-key=$HELIUS_API_KEY" \
+            -H "Content-Type: application/json" -d '{
+              "jsonrpc":"2.0",
+              "id":1,
+              "method":"getAssetsByOwner",
+              "params":{
+                "ownerAddress":"'"$WALLET2"'",
+                "page":1,
+                "limit":1000,
+                "options":{"showFungible":true,"showZeroBalance":false}
+              }
+            }')
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
             .result.items[]? | select(.id == $M) |
@@ -61,63 +70,53 @@ jobs:
 
           echo "🔁 Fetching transactions..."
 
-          # === FETCH TXs ===
-          XFERS_W1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
-          XFERS_W2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          # === FETCH TXs (v1 endpoint) ===
+          XFERS_W1=$(curl -s "$API/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          XFERS_W2=$(curl -s "$API/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
 
-          # === DEBUG OUTPUT ===
-          echo "$XFERS_W1" | jq '.' > data/debug_wallet1_transfers.json || echo "$XFERS_W1" > data/debug_wallet1_raw.txt
-          echo "$XFERS_W2" | jq '.' > data/debug_wallet2_transfers.json || echo "$XFERS_W2" > data/debug_wallet2_raw.txt
+          # Debug: salva raw JSON
+          echo "$XFERS_W1" > data/debug_wallet1_raw.json
+          echo "$XFERS_W2" > data/debug_wallet2_raw.json
 
           echo "🧮 Parsing tBTC transfers..."
 
-          # === LAST 30 tBTC TRANSFERS - WALLET 1 ===
-          if echo "$XFERS_W1" | jq -e 'type == "array"' > /dev/null; then
-            LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-              [ .[]
-                | select(.tokenTransfers != null)
-                | . as $tx
-                | $tx.tokenTransfers[]
-                | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-                | {
-                    timestamp: ($tx.timestamp | todateiso8601),
-                    amount: (
-                      if .toUserAccount == $W then
-                        "+" + (.tokenAmount | tostring)
-                      else
-                        "-" + (.tokenAmount | tostring)
-                      end
-                    )
-                  }
-              ] | sort_by(.timestamp) | reverse | .[:30]')
-          else
-            echo "⚠️ XFERS_W1 is not a valid array"
-            LAST_TBTC_W1="[]"
-          fi
+          # === PARSE LAST 30 TXs WALLET 1 ===
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
+            [ .[]?
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
-          # === LAST 30 tBTC TRANSFERS - WALLET 2 ===
-          if echo "$XFERS_W2" | jq -e 'type == "array"' > /dev/null; then
-            LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-              [ .[]
-                | select(.tokenTransfers != null)
-                | . as $tx
-                | $tx.tokenTransfers[]
-                | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-                | {
-                    timestamp: ($tx.timestamp | todateiso8601),
-                    amount: (
-                      if .toUserAccount == $W then
-                        "+" + (.tokenAmount | tostring)
-                      else
-                        "-" + (.tokenAmount | tostring)
-                      end
-                    )
-                  }
-              ] | sort_by(.timestamp) | reverse | .[:30]')
-          else
-            echo "⚠️ XFERS_W2 is not a valid array"
-            LAST_TBTC_W2="[]"
-          fi
+          # === PARSE LAST 30 TXs WALLET 2 ===
+          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
+            [ .[]?
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
           echo "💾 Writing status.json..."
 
