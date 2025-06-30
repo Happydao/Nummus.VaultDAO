@@ -26,63 +26,60 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
 
-          API="https://api.helius.xyz/v1"
+          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          echo "📡 Fetching balances..."
+          echo "📡 Fetching TBTC balances..."
 
-          # === BALANCE WALLET 1 ===
-          BALANCE_W1=$(curl -s -X POST "$API/rpc?api-key=$HELIUS_API_KEY" \
-            -H "Content-Type: application/json" -d '{
-              "jsonrpc":"2.0",
-              "id":1,
-              "method":"getAssetsByOwner",
-              "params":{
-                "ownerAddress":"'"$WALLET1"'",
-                "page":1,
-                "limit":1000,
-                "options":{"showFungible":true,"showZeroBalance":false}
+          # === WALLET 1 BALANCE ===
+          BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
+            "jsonrpc": "2.0",
+            "id": "1",
+            "method": "getTokenAccounts",
+            "params": {
+              "owner": "'"$WALLET1"'",
+              "page": 1,
+              "limit": 1000,
+              "displayOptions": {
+                "showZeroBalance": false
               }
-            }')
+            }
+          }')
 
           TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
-            {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-            "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+            .result[]? | select(.mint == $M) |
+            (.amount | tonumber) / (10 ^ (.decimals | tonumber))' | awk '{printf "%.8f", $1}')
 
-          # === BALANCE WALLET 2 ===
-          BALANCE_W2=$(curl -s -X POST "$API/rpc?api-key=$HELIUS_API_KEY" \
-            -H "Content-Type: application/json" -d '{
-              "jsonrpc":"2.0",
-              "id":1,
-              "method":"getAssetsByOwner",
-              "params":{
-                "ownerAddress":"'"$WALLET2"'",
-                "page":1,
-                "limit":1000,
-                "options":{"showFungible":true,"showZeroBalance":false}
+          # === WALLET 2 BALANCE ===
+          BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
+            "jsonrpc": "2.0",
+            "id": "1",
+            "method": "getTokenAccounts",
+            "params": {
+              "owner": "'"$WALLET2"'",
+              "page": 1,
+              "limit": 1000,
+              "displayOptions": {
+                "showZeroBalance": false
               }
-            }')
+            }
+          }')
 
           TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
-            .result.items[]? | select(.id == $M) |
-            {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-            "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }')
+            .result[]? | select(.mint == $M) |
+            (.amount | tonumber) / (10 ^ (.decimals | tonumber))' | awk '{printf "%.8f", $1}')
 
           echo "🔁 Fetching transactions..."
 
-          # === FETCH TXs (v1 endpoint) ===
-          XFERS_W1=$(curl -s "$API/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
-          XFERS_W2=$(curl -s "$API/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          XFERS_W1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          XFERS_W2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
 
-          # Debug: salva raw JSON
-          echo "$XFERS_W1" > data/debug_wallet1_raw.json
-          echo "$XFERS_W2" > data/debug_wallet2_raw.json
+          echo "$XFERS_W1" | jq '.' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2" | jq '.' > data/debug_wallet2_transfers.json
 
           echo "🧮 Parsing tBTC transfers..."
 
-          # === PARSE LAST 30 TXs WALLET 1 ===
           LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            [ .[]?
+            [ .[] 
               | select(.tokenTransfers != null)
               | . as $tx
               | $tx.tokenTransfers[]
@@ -96,12 +93,12 @@ jobs:
                       "-" + (.tokenAmount | tostring)
                     end
                   )
-                }
-            ] | sort_by(.timestamp) | reverse | .[:30]')
+              }
+            ] | sort_by(.timestamp) | reverse | .[:30]'
+          )
 
-          # === PARSE LAST 30 TXs WALLET 2 ===
           LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[]?
+            [ .[] 
               | select(.tokenTransfers != null)
               | . as $tx
               | $tx.tokenTransfers[]
@@ -115,8 +112,9 @@ jobs:
                       "-" + (.tokenAmount | tostring)
                     end
                   )
-                }
-            ] | sort_by(.timestamp) | reverse | .[:30]')
+              }
+            ] | sort_by(.timestamp) | reverse | .[:30]'
+          )
 
           echo "💾 Writing status.json..."
 
