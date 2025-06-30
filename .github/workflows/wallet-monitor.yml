@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -24,10 +24,10 @@ jobs:
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+          WALLET2_ATA="7e35bJhHd2mdM9WcsYxSbVjQJnnYJhFhCejMpJqRHSXg"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === Funzione: Calcola saldo tBTC per un wallet ===
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
@@ -49,7 +49,6 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
-          # === Funzione: Scarica fino a 5 pagine di transazioni ===
           fetch_transactions() {
             local WALLET=$1
             local ALL_TXS="[]"
@@ -70,29 +69,32 @@ jobs:
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
-          # === Salva raw ===
           echo "$XFERS_W1" > data/raw_wallet1.json
           echo "$XFERS_W2" > data/raw_wallet2.json
 
-          # === Salva debug (sintesi) ===
-          echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
+          echo "$XFERS_W1" | jq '[ .[] | select(.tokenTransfers != null) | {signature, timestamp, tokenTransfers} ]' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2" | jq '[ .[] | select(.tokenTransfers != null) | {signature, timestamp, tokenTransfers} ]' > data/debug_wallet2_transfers.json
 
-          # === Funzione: Filtra tBTC Transfers ===
           parse_transfers() {
             local DATA="$1"
             local WALLET="$2"
             local MINT="$3"
-            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" '
+            local ALT_ACCOUNT="$4"
+            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" --arg ATA "$ALT_ACCOUNT" '
               [ .[]
                 | select(.tokenTransfers != null)
                 | . as $tx
                 | $tx.tokenTransfers[]
-                | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
+                | select(.mint == $M and (
+                    (.toUserAccount // "") == $W or
+                    (.fromUserAccount // "") == $W or
+                    (.toTokenAccount // "") == $ATA or
+                    (.fromTokenAccount // "") == $ATA
+                  ))
                 | {
                     timestamp: ($tx.timestamp | todateiso8601),
                     amount: (
-                      if (.toUserAccount // "") == $W then
+                      if (.toUserAccount // .toTokenAccount) == $W or (.toTokenAccount // "") == $ATA then
                         "+" + (.tokenAmount | tostring)
                       else
                         "-" + (.tokenAmount | tostring)
@@ -102,10 +104,9 @@ jobs:
               ] | sort_by(.timestamp) | reverse | .[:30]'
           }
 
-          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC")
+          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC" "")
+          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC" "$WALLET2_ATA")
 
-          # === Salva status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
@@ -128,4 +129,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers with ATA fix" && git push)
