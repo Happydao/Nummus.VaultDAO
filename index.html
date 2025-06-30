@@ -23,8 +23,9 @@
     }
     .subtitle {
       text-align: center;
-      font-size: 1.4rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      margin-top: 0.3rem;
+      margin-bottom: 0.8rem;
       color: #c9b77d;
     }
     .totalsum {
@@ -56,7 +57,10 @@
       vertical-align: middle;
       margin: 0 10px;
     }
-    .logos .prices {
+    .logos .prices-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
       font-size: 1rem;
       color: #ccc;
       margin-top: 5px;
@@ -126,8 +130,9 @@
     <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
     <span style="font-size: 2rem; font-weight: bold; color: #ffd700;">$NUMMUS → tBTC</span>
     <img src="images/tbtc.png" alt="tBTC">
-    <div class="prices" id="token-prices">
-      $NUMMUS: <strong>$--</strong> | tBTC: <strong>$--</strong>
+    <div class="prices-row">
+      <div>$NUMMUS: <strong>$--</strong></div>
+      <div>tBTC: <strong id="tbtc-price">$--</strong></div>
     </div>
   </div>
 
@@ -158,8 +163,7 @@
     fetch('data/prices.json')
       .then(res => res.json())
       .then(p => {
-        document.getElementById('token-prices').innerHTML =
-          `$NUMMUS: <strong>$--</strong> | tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
+        document.getElementById('tbtc-price').textContent = `$${p.tbtc_price_usd}`;
         document.getElementById('total-info').textContent = `${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
       });
 
