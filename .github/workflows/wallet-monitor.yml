@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # ⏱ Esegui ogni ora
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,6 +20,7 @@ jobs:
 
       - name: Fetch balances and transfers
         run: |
+          set -e
           mkdir -p data
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
@@ -30,43 +31,28 @@ jobs:
 
           echo "📡 Fetching TBTC balances..."
 
-          # === WALLET 1 BALANCE ===
-          BALANCE_W1=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
-            "jsonrpc": "2.0",
-            "id": "1",
-            "method": "getTokenAccounts",
-            "params": {
-              "owner": "'"$WALLET1"'",
-              "page": 1,
-              "limit": 1000,
-              "displayOptions": {
-                "showZeroBalance": false
+          get_balance() {
+            local WALLET=$1
+            curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
+              "jsonrpc": "2.0",
+              "id": "1",
+              "method": "getTokenAccounts",
+              "params": {
+                "owner": "'"$WALLET"'",
+                "page": 1,
+                "limit": 1000,
+                "displayOptions": {
+                  "showZeroBalance": false
+                }
               }
-            }
-          }')
+            }' | jq -r --arg M "$MINT_TBTC" '
+              .result[]?
+              | select(.mint == $M)
+              | [.amount, .decimals] | @tsv' | awk '{ printf "%.8f", $1 / (10 ^ $2) }'
+          }
 
-          TBTC_BAL_W1=$(echo "$BALANCE_W1" | jq -r --arg M "$MINT_TBTC" '
-            .result[]? | select(.mint == $M) |
-            (.amount | tonumber) / (10 ^ (.decimals | tonumber))' | awk '{printf "%.8f", $1}')
-
-          # === WALLET 2 BALANCE ===
-          BALANCE_W2=$(curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
-            "jsonrpc": "2.0",
-            "id": "1",
-            "method": "getTokenAccounts",
-            "params": {
-              "owner": "'"$WALLET2"'",
-              "page": 1,
-              "limit": 1000,
-              "displayOptions": {
-                "showZeroBalance": false
-              }
-            }
-          }')
-
-          TBTC_BAL_W2=$(echo "$BALANCE_W2" | jq -r --arg M "$MINT_TBTC" '
-            .result[]? | select(.mint == $M) |
-            (.amount | tonumber) / (10 ^ (.decimals | tonumber))' | awk '{printf "%.8f", $1}')
+          TBTC_BAL_W1=$(get_balance "$WALLET1")
+          TBTC_BAL_W2=$(get_balance "$WALLET2")
 
           echo "🔁 Fetching transactions..."
 
@@ -78,43 +64,33 @@ jobs:
 
           echo "🧮 Parsing tBTC transfers..."
 
-          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
-            [ .[] 
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-              | {
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: (
-                    if .toUserAccount == $W then
-                      "+" + (.tokenAmount | tostring)
-                    else
-                      "-" + (.tokenAmount | tostring)
-                    end
-                  )
-              }
-            ] | sort_by(.timestamp) | reverse | .[:30]'
-          )
+          # Parse transactions solo se validi
+          parse_transfers() {
+            local XFERS="$1"
+            local WALLET="$2"
+            echo "$XFERS" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET" '
+              try (
+                [ .[]
+                  | select(.tokenTransfers != null)
+                  | . as $tx
+                  | $tx.tokenTransfers[]
+                  | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+                  | {
+                      timestamp: ($tx.timestamp | todateiso8601),
+                      amount: (
+                        if .toUserAccount == $W then
+                          "+" + (.tokenAmount | tostring)
+                        else
+                          "-" + (.tokenAmount | tostring)
+                        end
+                      )
+                    }
+                ] | sort_by(.timestamp) | reverse | .[:30]
+              ) catch []'
+          }
 
-          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[] 
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-              | {
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: (
-                    if .toUserAccount == $W then
-                      "+" + (.tokenAmount | tostring)
-                    else
-                      "-" + (.tokenAmount | tostring)
-                    end
-                  )
-              }
-            ] | sort_by(.timestamp) | reverse | .[:30]'
-          )
+          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1")
+          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2")
 
           echo "💾 Writing status.json..."
 
