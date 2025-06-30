@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora (UTC)
+    - cron: '0 * * * *'  # Esegui ogni ora
   workflow_dispatch:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === Get TBTC balances using getAssetsByOwner ===
+          # === Funzione: Calcola saldo tBTC per un wallet ===
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
@@ -49,27 +49,36 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
-          # === Fetch transactions with pagination (2 pages) ===
+          # === Funzione: Scarica fino a 5 pagine di transazioni ===
           fetch_transactions() {
             local WALLET=$1
-            local OUT1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100")
-            local SIG1=$(echo "$OUT1" | jq -r '.[-1].signature')
-            local OUT2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100&before=$SIG1")
-            jq -s 'add' <<< "$OUT1 $OUT2"
+            local ALL_TXS="[]"
+            local LAST_SIG=""
+            for i in {1..5}; do
+              if [ -z "$LAST_SIG" ]; then
+                PAGE=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100")
+              else
+                PAGE=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100&before=$LAST_SIG")
+              fi
+              ALL_TXS=$(jq -s 'add' <<< "$ALL_TXS $PAGE")
+              LAST_SIG=$(echo "$PAGE" | jq -r '.[-1].signature // empty')
+              [ -z "$LAST_SIG" ] && break
+            done
+            echo "$ALL_TXS"
           }
 
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
-          # === Save raw JSON ===
+          # === Salva raw ===
           echo "$XFERS_W1" > data/raw_wallet1.json
           echo "$XFERS_W2" > data/raw_wallet2.json
 
-          # === Save debug filtered JSON ===
+          # === Salva debug (sintesi) ===
           echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # === Parse tBTC transfers (in/out) ===
+          # === Funzione: Filtra tBTC Transfers ===
           parse_transfers() {
             local DATA="$1"
             local WALLET="$2"
@@ -96,7 +105,7 @@ jobs:
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
           LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC")
 
-          # === Write status.json ===
+          # === Salva status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
