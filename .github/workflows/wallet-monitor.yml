@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,19 +27,12 @@ jobs:
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # === Funzione: Calcola saldo tBTC per un wallet ===
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
-              "jsonrpc":"2.0",
-              "id":"1",
-              "method":"getAssetsByOwner",
-              "params":{
-                "ownerAddress":"'"$WALLET"'",
-                "page":1,
-                "limit":1000,
-                "options":{"showFungible":true,"showZeroBalance":false}
-              }
+              "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
+              "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
+              "options":{"showFungible":true,"showZeroBalance":false}}
             }' | jq -r --arg M "$MINT_TBTC" '
               .result.items[]? | select(.id == $M) |
               {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
@@ -49,7 +42,6 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
-          # === Funzione: Scarica fino a 5 pagine di transazioni ===
           fetch_transactions() {
             local WALLET=$1
             local ALL_TXS="[]"
@@ -70,11 +62,14 @@ jobs:
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
-          echo "$XFERS_W1" > data/raw_wallet1.json
-          echo "$XFERS_W2" > data/raw_wallet2.json
+          XFERS_W1_DEDUP=$(echo "$XFERS_W1" | jq 'unique_by(.signature)')
+          XFERS_W2_DEDUP=$(echo "$XFERS_W2" | jq 'unique_by(.signature)')
 
-          echo "$XFERS_W1" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$XFERS_W2" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
+          echo "$XFERS_W1_DEDUP" > data/raw_wallet1.json
+          echo "$XFERS_W2_DEDUP" > data/raw_wallet2.json
+
+          echo "$XFERS_W1_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
           parse_transfers() {
             local DATA="$1"
@@ -100,10 +95,10 @@ jobs:
               ] | unique_by(.signature) | sort_by(.timestamp) | reverse | .[:30]'
           }
 
-          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC")
+          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1_DEDUP" "$WALLET1" "$MINT_TBTC")
+          MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
+          LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
 
-          # === Recupera prezzo tBTC ===
           PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
 
           VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
@@ -111,7 +106,6 @@ jobs:
           TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
           TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
 
-          # === Salva status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
@@ -134,7 +128,6 @@ jobs:
               timestamp: $time
             }' > data/status.json
 
-          # === Salva prices.json ===
           jq -n \
             --arg price "$PRICE_TBTC" \
             --arg w1_bal "$TBTC_BAL_W1" \
