@@ -19,14 +19,13 @@
       color: #ffd700;
       font-weight: 700;
       font-size: 2.6rem;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.2rem;
     }
     .subtitle {
       text-align: center;
-      font-size: 1.2rem;
-      margin-top: 0.3rem;
-      margin-bottom: 0.8rem;
-      color: #c9b77d;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #ffd700;
     }
     .totalsum {
       text-align: center;
@@ -50,7 +49,7 @@
     }
     .logos {
       text-align: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.2rem;
     }
     .logos img {
       height: 64px;
@@ -60,10 +59,10 @@
     .logos .prices-row {
       display: flex;
       justify-content: center;
-      gap: 40px;
-      font-size: 1rem;
+      gap: 120px;
+      font-size: 0.95rem;
       color: #ccc;
-      margin-top: 5px;
+      margin-top: 6px;
     }
     .container {
       display: flex;
@@ -126,12 +125,12 @@
     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
   </a>
 
-  <div class="logos" id="logo-section">
+  <div class="logos">
     <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
     <span style="font-size: 2rem; font-weight: bold; color: #ffd700;">$NUMMUS → tBTC</span>
     <img src="images/tbtc.png" alt="tBTC">
     <div class="prices-row">
-      <div>$NUMMUS: <strong>$--</strong></div>
+      <div id="nummus-price">$NUMMUS: <strong>$--</strong></div>
       <div>tBTC: <strong id="tbtc-price">$--</strong></div>
     </div>
   </div>
