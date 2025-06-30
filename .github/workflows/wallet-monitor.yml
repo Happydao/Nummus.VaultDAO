@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Esegui ogni ora
+    - cron: '0 * * * *'  # Ogni ora
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y jq curl
 
-      - name: Fetch balances, transactions, and prices
+      - name: Fetch balances, transactions, prices
         run: |
           mkdir -p data
 
@@ -34,7 +34,7 @@ jobs:
               "id":"1",
               "method":"getAssetsByOwner",
               "params":{
-                "ownerAddress":"'"$WALLET"'",
+                "ownerAddress":"'$WALLET'",
                 "page":1,
                 "limit":1000,
                 "options":{"showFungible":true,"showZeroBalance":false}
@@ -97,55 +97,61 @@ jobs:
               ] | unique | sort_by(.timestamp) | reverse | .[:30]'
           }
 
-          MERGED_W2=$(jq -s 'add' <<< "$XFERS_W1 $XFERS_W2")
-
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
-
-          TBTC_PRICE=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq '.tbtc.usd')
-          NUMMUS_PRICE=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq '."nummus-aeternitas".usd')
-
-          TBTC_TOTAL=$(awk "BEGIN { printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2 }")
-          TBTC_TOTAL_USD=$(awk "BEGIN { printf \"%.2f\", $TBTC_TOTAL * $TBTC_PRICE }")
+          LAST_TBTC_W2=$(parse_transfers "$XFERS_W1$XFERS_W2" "$WALLET2" "$MINT_TBTC")
 
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
             --arg tbtc2 "$TBTC_BAL_W2" \
             --argjson last2 "$LAST_TBTC_W2" \
-            --argjson price1 "$TBTC_PRICE" \
-            --argjson price2 "$NUMMUS_PRICE" \
             --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
               wallet_1: {
-                tbtc_balance: $tbtc1,
-                tbtc_usd_value: ($tbtc1 | tonumber) * $price1,
+                tbtc_balance: $tbtc1 | tonumber,
                 last_tbtc_transfers: $last1
               },
               vault_wallet_2: {
-                tbtc_balance: $tbtc2,
-                tbtc_usd_value: ($tbtc2 | tonumber) * $price1,
+                tbtc_balance: $tbtc2 | tonumber,
                 last_tbtc_transfers: $last2
               },
               timestamp: $time
             }' > data/status.json
 
+          # === Get tBTC price from CoinGecko ===
+          PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
+
+          VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
+          VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
+          TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
+
           jq -n \
+            --arg price "$PRICE_TBTC" \
+            --arg w1_bal "$TBTC_BAL_W1" \
+            --arg w1_val "$VALUE_W1" \
+            --arg w2_bal "$TBTC_BAL_W2" \
+            --arg w2_val "$VALUE_W2" \
+            --arg total_bal "$TOTAL_TBTC" \
+            --arg total_val "$TOTAL_VALUE" \
             --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --argjson tbtc "$TBTC_PRICE" \
-            --argjson nummus "$NUMMUS_PRICE" \
-            --arg tbtc_total "$TBTC_TOTAL" \
-            --arg tbtc_total_usd "$TBTC_TOTAL_USD" \
             '{
-              timestamp: $time,
-              tbtc_usd: $tbtc,
-              nummus_usd: $nummus,
-              tbtc_total_balance: ($tbtc_total | tonumber),
-              tbtc_total_value_usd: ($tbtc_total_usd | tonumber)
+              tbtc_price_usd: ($price | tonumber),
+              total_tbtc_balance: ($total_bal | tonumber),
+              total_usd_value: ($total_val | tonumber),
+              wallet_1: {
+                tbtc_balance: ($w1_bal | tonumber),
+                tbtc_usd_value: ($w1_val | tonumber)
+              },
+              wallet_2: {
+                tbtc_balance: ($w2_bal | tonumber),
+                tbtc_usd_value: ($w2_val | tonumber)
+              },
+              timestamp: $time
             }' > data/prices.json
 
       - name: Commit if changed
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: balances, txs, prices" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: latest balances, prices and transfers" && git push)
