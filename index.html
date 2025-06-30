@@ -14,57 +14,53 @@
       padding: 2rem;
       position: relative;
     }
-
     h1 {
       text-align: center;
       color: #ffd700;
       font-weight: 700;
-      font-size: 2.6rem; /* ✅ aumentato del 30% */
+      font-size: 2.6rem;
       margin-bottom: 0.3rem;
     }
-
     .subtitle {
       text-align: center;
       font-size: 1.4rem;
-      margin-bottom: 2.5rem;
+      margin-bottom: 1rem;
       color: #c9b77d;
     }
-
     .github-logo {
       position: absolute;
       top: 20px;
       right: 20px;
     }
-
     .github-logo img {
       width: 32px;
       height: 32px;
       opacity: 0.8;
       transition: opacity 0.2s ease;
     }
-
     .github-logo img:hover {
       opacity: 1;
     }
-
     .logos {
       text-align: center;
       margin-bottom: 0.5rem;
     }
-
     .logos img {
-      height: 64px; /* ✅ ingrandito da 48px */
+      height: 64px;
       vertical-align: middle;
       margin: 0 10px;
     }
-
+    .logos .prices {
+      font-size: 1rem;
+      color: #ccc;
+      margin-top: 5px;
+    }
     .container {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 2rem;
     }
-
     .card {
       background-color: rgba(30, 30, 30, 0.92);
       border: 2px solid #bba76f;
@@ -77,7 +73,6 @@
         inset 0 0 6px rgba(255, 255, 255, 0.05);
       transition: transform 0.2s ease;
     }
-
     .card:hover {
       transform: scale(1.01);
       box-shadow:
@@ -85,7 +80,6 @@
         0 0 8px rgba(255, 255, 200, 0.25),
         inset 0 0 10px rgba(255, 255, 255, 0.08);
     }
-
     .wallet-link {
       display: block;
       font-size: 1.2rem;
@@ -95,36 +89,29 @@
       margin-bottom: 1.2rem;
       text-align: center;
     }
-
     .wallet-link:hover {
       text-decoration: underline;
     }
-
     .balance,
     .transfers {
       text-align: left;
     }
-
     strong {
       font-weight: 700;
     }
-
     .transfers {
       font-family: monospace;
       font-size: 0.9rem;
       line-height: 1.5;
       margin-top: 1.2rem;
-      max-height: none;
       overflow-y: visible;
     }
-
     #timestamp {
       text-align: center;
       font-size: 0.85rem;
       margin-top: 2.5rem;
       color: #aaa;
     }
-
     #timestamp .note {
       font-style: italic;
       color: #bbb;
@@ -133,35 +120,35 @@
 </head>
 <body>
 
-  <!-- GitHub Logo -->
   <a class="github-logo" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" title="View on GitHub">
     <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
   </a>
 
-  <!-- Token Logos and Title -->
-  <div class="logos">
+  <div class="logos" id="logo-section">
     <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
     <span style="font-size: 2rem; font-weight: bold; color: #ffd700;">$NUMMUS → tBTC</span>
     <img src="images/tbtc.png" alt="tBTC">
+    <div class="prices" id="token-prices">
+      $NUMMUS: <strong>$--</strong> | tBTC: <strong>$--</strong>
+    </div>
   </div>
-  <div class="subtitle">Monitor</div>
+
+  <div class="subtitle" id="summary">Monitor</div>
 
   <div class="container">
-    <!-- Swap Wallet -->
     <div class="card" id="swap-card">
       <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
         tBTC Swap Wallet
       </a>
-      <p class="balance"><strong>BALANCE:</strong> <strong><span id="swap-balance">--</span></strong> tBTC</p>
+      <p class="balance"><strong>BALANCE:</strong> <span id="swap-balance">--</span></p>
       <div class="transfers" id="swap-transfers">Loading transactions...</div>
     </div>
 
-    <!-- Vault Wallet -->
     <div class="card" id="vault-card">
       <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
         Nummus Aeternitas Vault DAO
       </a>
-      <p class="balance"><strong>BALANCE:</strong> <strong><span id="vault-balance">--</span></strong> tBTC</p>
+      <p class="balance"><strong>BALANCE:</strong> <span id="vault-balance">--</span></p>
       <div class="transfers" id="vault-transfers">Loading transactions...</div>
     </div>
   </div>
@@ -169,27 +156,37 @@
   <p id="timestamp">⏳ Loading... <span class="note">(updates every hour, UTC)</span></p>
 
   <script>
+    let prices = null;
+
+    fetch('data/prices.json')
+      .then(res => res.json())
+      .then(p => {
+        prices = p;
+        // update header total
+        document.getElementById('summary').innerHTML = 
+          `Monitor — <strong>${p.total_tbtc_balance} tBTC</strong> (<strong>$${p.total_usd_value}</strong>)`;
+        // update logo price line
+        document.getElementById('token-prices').innerHTML = 
+          `$NUMMUS: <strong>$--</strong> | tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
+      });
+
     fetch('data/status.json')
       .then(res => res.json())
       .then(data => {
-        // Wallet 1 (Swap)
-        document.getElementById('swap-balance').textContent = data.wallet_1.tbtc_balance || '0.00000000';
-        const transfers1 = data.wallet_1.last_tbtc_transfers || [];
-        const swapTransfersEl = document.getElementById('swap-transfers');
-        swapTransfersEl.innerHTML = transfers1.length
-          ? transfers1.map(t =>
-              `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`
-            ).join('')
+        const b1 = data.wallet_1.tbtc_balance.toFixed(8);
+        const v1 = data.wallet_1.tbtc_usd_value.toFixed(2);
+        document.getElementById('swap-balance').textContent = `${b1} tBTC ($${v1})`;
+        const t1 = data.wallet_1.last_tbtc_transfers || [];
+        document.getElementById('swap-transfers').innerHTML = t1.length
+          ? t1.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
           : 'No transactions found.';
 
-        // Wallet 2 (Vault)
-        document.getElementById('vault-balance').textContent = data.vault_wallet_2.tbtc_balance || '0.00000000';
-        const transfers2 = data.vault_wallet_2.last_tbtc_transfers || [];
-        const vaultTransfersEl = document.getElementById('vault-transfers');
-        vaultTransfersEl.innerHTML = transfers2.length
-          ? transfers2.map(t =>
-              `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`
-            ).join('')
+        const b2 = data.vault_wallet_2.tbtc_balance.toFixed(8);
+        const v2 = data.vault_wallet_2.tbtc_usd_value.toFixed(2);
+        document.getElementById('vault-balance').textContent = `${b2} tBTC ($${v2})`;
+        const t2 = data.vault_wallet_2.last_tbtc_transfers || [];
+        document.getElementById('vault-transfers').innerHTML = t2.length
+          ? t2.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
           : 'No transactions found.';
 
         document.getElementById('timestamp').innerHTML =
