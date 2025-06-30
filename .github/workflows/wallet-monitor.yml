@@ -28,6 +28,7 @@ jobs:
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
+          # === Funzione saldo tBTC ===
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
@@ -49,6 +50,7 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1")
           TBTC_BAL_W2=$(get_balance "$WALLET2")
 
+          # === Scarica fino a 5 pagine di tx ===
           fetch_transactions() {
             local WALLET=$1
             local ALL_TXS="[]"
@@ -69,18 +71,27 @@ jobs:
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
+          # === Salva RAW ===
           echo "$XFERS_W1" > data/raw_wallet1.json
           echo "$XFERS_W2" > data/raw_wallet2.json
 
+          # === Salva DEBUG sintesi ===
           echo "$XFERS_W1" | jq '[ .[] | select(.tokenTransfers != null) | {signature, timestamp, tokenTransfers} ]' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '[ .[] | select(.tokenTransfers != null) | {signature, timestamp, tokenTransfers} ]' > data/debug_wallet2_transfers.json
 
+          # === Salva DEBUG tBTC transfer grezzi WALLET 2 ===
+          echo "$XFERS_W2" | jq --arg M "$MINT_TBTC" '
+            [ .[] | select(.tokenTransfers != null)
+              | .tokenTransfers[] | select(.mint == $M)
+            ]' > data/debug_wallet2_tbtc.json
+
+          # === Estrai ultimi 30 tBTC transfer ===
           parse_transfers() {
             local DATA="$1"
             local WALLET="$2"
             local MINT="$3"
-            local ALT_ACCOUNT="$4"
-            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" --arg ATA "$ALT_ACCOUNT" '
+            local ATA="$4"
+            echo "$DATA" | jq -c --arg M "$MINT" --arg W "$WALLET" --arg ATA "$ATA" '
               [ .[]
                 | select(.tokenTransfers != null)
                 | . as $tx
@@ -107,6 +118,7 @@ jobs:
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1" "$MINT_TBTC" "")
           LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2" "$MINT_TBTC" "$WALLET2_ATA")
 
+          # === Salva status.json ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
@@ -129,4 +141,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers with ATA fix" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers with debug dump" && git push)
