@@ -2,7 +2,7 @@ name: Monitor Vault + Swap Events
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *'  # ⏱ Run every hour
   workflow_dispatch:
 
 jobs:
@@ -18,79 +18,99 @@ jobs:
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y jq curl
 
-      - name: Fetch balances and transfers
+      - name: Fetch balances and transactions
         run: |
-          set -e
           mkdir -p data
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
 
-          API="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
-
           echo "📡 Fetching TBTC balances..."
 
-          get_balance() {
-            local WALLET=$1
-            curl -s -X POST "$API" -H "Content-Type: application/json" -d '{
-              "jsonrpc": "2.0",
-              "id": "1",
-              "method": "getTokenAccounts",
-              "params": {
-                "owner": "'"$WALLET"'",
-                "page": 1,
-                "limit": 1000,
-                "displayOptions": {
-                  "showZeroBalance": false
-                }
-              }
-            }' | jq -r --arg M "$MINT_TBTC" '
-              .result[]?
-              | select(.mint == $M)
-              | [.amount, .decimals] | @tsv' | awk '{ printf "%.8f", $1 / (10 ^ $2) }'
-          }
+          API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          TBTC_BAL_W1=$(get_balance "$WALLET1")
-          TBTC_BAL_W2=$(get_balance "$WALLET2")
+          # Balance WALLET 1
+          BAL_W1=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"getTokenAccountsByOwner",
+            "params":[
+              "'"$WALLET1"'",
+              { "mint": "'"$MINT_TBTC"'" },
+              { "encoding": "jsonParsed" }
+            ]
+          }')
+
+          TBTC_BAL_W1=$(echo "$BAL_W1" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
+            map(select(.amount != "0")) |
+            map((.amount | tonumber) / (10 ^ (.decimals | tonumber))) |
+            add // 0' | xargs printf "%.8f")
+
+          # Balance WALLET 2
+          BAL_W2=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"getTokenAccountsByOwner",
+            "params":[
+              "'"$WALLET2"'",
+              { "mint": "'"$MINT_TBTC"'" },
+              { "encoding": "jsonParsed" }
+            ]
+          }')
+
+          TBTC_BAL_W2=$(echo "$BAL_W2" | jq '[.result.value[]?.account.data.parsed.info.tokenAmount] |
+            map(select(.amount != "0")) |
+            map((.amount | tonumber) / (10 ^ (.decimals | tonumber))) |
+            add // 0' | xargs printf "%.8f")
 
           echo "🔁 Fetching transactions..."
 
-          XFERS_W1=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET1/transactions?api-key=$HELIUS_API_KEY&limit=200")
-          XFERS_W2=$(curl -s "https://api.helius.xyz/v0/addresses/$WALLET2/transactions?api-key=$HELIUS_API_KEY&limit=200")
+          API_TX="https://mainnet.helius.xyz/api/v1/addresses"
+
+          XFERS_W1=$(curl -s "$API_TX/$WALLET1/transactions?limit=200&api-key=$HELIUS_API_KEY")
+          XFERS_W2=$(curl -s "$API_TX/$WALLET2/transactions?limit=200&api-key=$HELIUS_API_KEY")
 
           echo "$XFERS_W1" | jq '.' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2" | jq '.' > data/debug_wallet2_transfers.json
 
           echo "🧮 Parsing tBTC transfers..."
 
-          # Parse transactions solo se validi
-          parse_transfers() {
-            local XFERS="$1"
-            local WALLET="$2"
-            echo "$XFERS" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET" '
-              try (
-                [ .[]
-                  | select(.tokenTransfers != null)
-                  | . as $tx
-                  | $tx.tokenTransfers[]
-                  | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
-                  | {
-                      timestamp: ($tx.timestamp | todateiso8601),
-                      amount: (
-                        if .toUserAccount == $W then
-                          "+" + (.tokenAmount | tostring)
-                        else
-                          "-" + (.tokenAmount | tostring)
-                        end
-                      )
-                    }
-                ] | sort_by(.timestamp) | reverse | .[:30]
-              ) catch []'
-          }
+          LAST_TBTC_W1=$(echo "$XFERS_W1" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET1" '
+            [ .[]
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
-          LAST_TBTC_W1=$(parse_transfers "$XFERS_W1" "$WALLET1")
-          LAST_TBTC_W2=$(parse_transfers "$XFERS_W2" "$WALLET2")
+          LAST_TBTC_W2=$(echo "$XFERS_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
+            [ .[]
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount == $W or .fromUserAccount == $W))
+              | {
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: (
+                    if .toUserAccount == $W then
+                      "+" + (.tokenAmount | tostring)
+                    else
+                      "-" + (.tokenAmount | tostring)
+                    end
+                  )
+                }
+            ] | sort_by(.timestamp) | reverse | .[:30]')
 
           echo "💾 Writing status.json..."
 
@@ -116,4 +136,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: latest tBTC transfers" && git push)
+          git diff --quiet || (git add data/status.json && git commit -m "Update: latest tBTC transfers" && git push)
