@@ -107,25 +107,6 @@
       line-height: 1.5;
       margin-top: 1.2rem;
     }
-    .info-section {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-    .info-section img {
-      width: 160px;
-    }
-    .info-bubble {
-      background-color: rgba(30, 30, 30, 0.9);
-      border: 2px solid #bba76f;
-      padding: 1rem;
-      border-radius: 10px;
-      max-width: 300px;
-      font-size: 0.9rem;
-      color: #ddd;
-    }
     #timestamp {
       text-align: center;
       font-size: 0.85rem;
@@ -135,6 +116,19 @@
     #timestamp .note {
       font-style: italic;
       color: #bbb;
+    }
+    .image-section {
+      margin-top: 3rem;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .image-section img {
+      width: 360px;
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 2px solid #bba76f;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.1);
     }
   </style>
 </head>
@@ -177,9 +171,8 @@
     </div>
   </div>
 
-  <div class="info-section">
-    <img src="images/resume.jpg" alt="resume">
-    <div class="info-bubble" id="summary">Loading comparison...</div>
+  <div class="image-section">
+    <img src="images/resume.jpg" alt="Resume Image" />
   </div>
 
   <p id="timestamp">⏳ Loading... <span class="note">(updates every hour, UTC)</span></p>
@@ -191,12 +184,6 @@
         document.getElementById('tbtc-price').innerHTML = `tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
         document.getElementById('nummus-price').innerHTML = `$NUMMUS: <strong>$${p.nummus_price_usd}</strong>`;
         document.getElementById('total-info').innerHTML = `<strong>Total:</strong> ${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
-      });
-
-    fetch('data/prices2.json')
-      .then(res => res.json())
-      .then(p2 => {
-        document.getElementById('summary').innerHTML = `As of now, 10.000 $NUMMUS not only represent <strong>$${p2.usd_value_of_10.000_nummus}</strong>, but also share <strong>${p2.tbtc_for_10.000_nummus} tBTC</strong> (<strong>$${p2.usd_value_of_that_tbtc}</strong>)`;
       });
 
     fetch('data/status.json')
