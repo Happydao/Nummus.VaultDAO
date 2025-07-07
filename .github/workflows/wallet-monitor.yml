@@ -85,13 +85,7 @@ jobs:
                 | {
                     signature: $tx.signature,
                     timestamp: ($tx.timestamp | todateiso8601),
-                    amount: (
-                      if (.toUserAccount // "") == $W then
-                        "+" + (.tokenAmount | tostring)
-                      else
-                        "-" + (.tokenAmount | tostring)
-                      end
-                    )
+                    amount: ((if (.toUserAccount // "") == $W then "+" else "-" end) + (.tokenAmount | tostring))
                   }
               ] | unique_by(.signature) | sort_by(.timestamp) | reverse | .[:30]'
           }
