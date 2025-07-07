@@ -105,8 +105,8 @@ jobs:
 
           echo "🔍 Jupiter response:" && echo "$JUPITER_RES" | jq
 
-          PRICE_TBTC=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_TBTC" '.[$id].price // 0')
-          PRICE_NUMMUS=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_NUMMUS" '.[$id].price // 0')
+          PRICE_TBTC=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_TBTC" '.[$id].usdPrice // 0')
+          PRICE_NUMMUS=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_NUMMUS" '.[$id].usdPrice // 0')
 
           VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
           VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
