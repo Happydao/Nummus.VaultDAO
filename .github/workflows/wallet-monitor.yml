@@ -20,6 +20,7 @@ jobs:
 
       - name: Fetch balances, prices, and transactions
         run: |
+          set -e
           mkdir -p data
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
@@ -29,14 +30,21 @@ jobs:
 
           get_balance() {
             local WALLET=$1
-            curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+            local OUTPUT=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
               "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
               "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}}
-            }' | jq -r --arg M "$MINT_TBTC" '
+            }')
+            local BAL_DEC=$(echo "$OUTPUT" | jq -r --arg M "$MINT_TBTC" '
               .result.items[]? | select(.id == $M) |
               {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
-              "\(.bal) \(.dec)"' | awk '{ printf "%.8f", $1 / (10 ^ $2) }'
+              "\(.bal) \(.dec)"')
+
+            if [ -n "$BAL_DEC" ]; then
+              echo "$BAL_DEC" | awk '{ if ($1 && $2) printf "%.8f", $1 / (10 ^ $2); else print "0.00000000" }'
+            else
+              echo "0.00000000"
+            fi
           }
 
           TBTC_BAL_W1=$(get_balance "$WALLET1")
@@ -102,8 +110,17 @@ jobs:
           PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
           PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
 
-          VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
-          VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          VALUE_W1="0"
+          VALUE_W2="0"
+          TOTAL_TBTC="0"
+          TOTAL_VALUE="0"
+
+          if [[ -n "$TBTC_BAL_W1" && -n "$PRICE_TBTC" ]]; then
+            VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
+          fi
+          if [[ -n "$TBTC_BAL_W2" && -n "$PRICE_TBTC" ]]; then
+            VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          fi
           TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
           TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
 
