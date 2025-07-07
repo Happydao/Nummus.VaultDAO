@@ -108,10 +108,40 @@ jobs:
           PRICE_TBTC=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_TBTC" '.[$id].usdPrice // 0')
           PRICE_NUMMUS=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_NUMMUS" '.[$id].usdPrice // 0')
 
-          VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
-          VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
-          TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
-          TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
+          safe_calc() {
+            awk -v a="$1" -v b="$2" 'BEGIN {
+              if (a == "" || b == "") {
+                print "0.00";
+              } else {
+                printf "%.2f", a * b;
+              }
+            }'
+          }
+
+          safe_sum() {
+            awk -v a="$1" -v b="$2" 'BEGIN {
+              if (a == "" || b == "") {
+                print "0.00";
+              } else {
+                printf "%.2f", a + b;
+              }
+            }'
+          }
+
+          safe_sum_precise() {
+            awk -v a="$1" -v b="$2" 'BEGIN {
+              if (a == "" || b == "") {
+                print "0.00000000";
+              } else {
+                printf "%.8f", a + b;
+              }
+            }'
+          }
+
+          VALUE_W1=$(safe_calc "$TBTC_BAL_W1" "$PRICE_TBTC")
+          VALUE_W2=$(safe_calc "$TBTC_BAL_W2" "$PRICE_TBTC")
+          TOTAL_TBTC=$(safe_sum_precise "$TBTC_BAL_W1" "$TBTC_BAL_W2")
+          TOTAL_VALUE=$(safe_sum "$VALUE_W1" "$VALUE_W2")
 
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
@@ -170,4 +200,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC & NUMMUS prices and data" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC & NUMMUS prices and data" && git p
