@@ -25,14 +25,13 @@ jobs:
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-          MINT_NUMMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
               "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-              "params":{"ownerAddress":"'$WALLET'","page":1,"limit":1000,
+              "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}}
             }' | jq -r --arg M "$MINT_TBTC" '
               .result.items[]? | select(.id == $M) |
@@ -85,83 +84,28 @@ jobs:
                 | {
                     signature: $tx.signature,
                     timestamp: ($tx.timestamp | todateiso8601),
-                    amount: ((if (.toUserAccount // "") == $W then "+" else "-" end) + (.tokenAmount | tostring))
+                    amount: (
+                      if (.toUserAccount // "") == $W then
+                        "+" + (.tokenAmount | tostring)
+                      else
+                        "-" + (.tokenAmount | tostring)
+                      end
+                    )
                   }
               ] | unique_by(.signature) | sort_by(.timestamp) | reverse | .[:30]'
           }
 
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1_DEDUP" "$WALLET1" "$MINT_TBTC")
-          MERGED_W2=$(jq -s 'add | unique_by(.signature) | sort_by(.timestamp) | reverse' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
+          MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
+          LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
 
-          LAST_TBTC_W2=$(echo "$MERGED_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
-            [ .[]
-              | select(.tokenTransfers != null)
-              | . as $tx
-              | $tx.tokenTransfers[]
-              | select(.mint == $M and (.toUserAccount // "") == $W)
-              | {
-                  signature: $tx.signature,
-                  timestamp: ($tx.timestamp | todateiso8601),
-                  amount: ("+" + (.tokenAmount | tostring))
-                }
-            ] | unique_by(.signature) | sort_by(.timestamp) | reverse | .[:30]')
+          PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
+          PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
 
-          JUPITER_API="https://lite-api.jup.ag/price/v3?ids=$MINT_TBTC,$MINT_NUMMUS"
-          JUPITER_RES=$(curl -s "$JUPITER_API")
-
-          echo "🔍 Jupiter response:" && echo "$JUPITER_RES" | jq
-
-          PRICE_TBTC=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_TBTC" '.[$id].usdPrice // 0')
-          PRICE_NUMMUS=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_NUMMUS" '.[$id].usdPrice // 0')
-
-          safe_calc() {
-            awk -v a="$1" -v b="$2" 'BEGIN {
-              if (a == "" || b == "") {
-                print "0.00";
-              } else {
-                printf "%.2f", a * b;
-              }
-            }'
-          }
-
-          safe_sum() {
-            awk -v a="$1" -v b="$2" 'BEGIN {
-              if (a == "" || b == "") {
-                print "0.00";
-              } else {
-                printf "%.2f", a + b;
-              }
-            }'
-          }
-
-          safe_sum_precise() {
-            awk -v a="$1" -v b="$2" 'BEGIN {
-              if (a == "" || b == "") {
-                print "0.00000000";
-              } else {
-                printf "%.8f", a + b;
-              }
-            }'
-          }
-
-          VALUE_W1=$(safe_calc "$TBTC_BAL_W1" "$PRICE_TBTC")
-          VALUE_W2=$(safe_calc "$TBTC_BAL_W2" "$PRICE_TBTC")
-          TOTAL_TBTC=$(safe_sum_precise "$TBTC_BAL_W1" "$TBTC_BAL_W2")
-          TOTAL_VALUE=$(safe_sum "$VALUE_W1" "$VALUE_W2")
-
-          echo "📊 DEBUG VARIABILI:"
-          echo "TBTC_BAL_W1=$TBTC_BAL_W1"
-          echo "TBTC_BAL_W2=$TBTC_BAL_W2"
-          echo "PRICE_TBTC=$PRICE_TBTC"
-          echo "PRICE_NUMMUS=$PRICE_NUMMUS"
-          echo "VALUE_W1=$VALUE_W1"
-          echo "VALUE_W2=$VALUE_W2"
-          echo "TOTAL_TBTC=$TOTAL_TBTC"
-          echo "TOTAL_VALUE=$TOTAL_VALUE"
-          echo
-          echo "📄 LAST_TBTC_W1:" && echo "$LAST_TBTC_W1"
-          echo
-          echo "📄 LAST_TBTC_W2:" && echo "$LAST_TBTC_W2"
+          VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
+          VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
+          TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
 
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
