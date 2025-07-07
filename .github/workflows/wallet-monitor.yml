@@ -25,13 +25,14 @@ jobs:
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+          MINT_NUMMUS="9JK2U7aEkp3tWaFNuaJowWRgNys5DVaKGxWk73VT5ray"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
           get_balance() {
             local WALLET=$1
             curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
               "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-              "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
+              "params":{"ownerAddress":"'$WALLET'","page":1,"limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}}
             }' | jq -r --arg M "$MINT_TBTC" '
               .result.items[]? | select(.id == $M) |
@@ -99,8 +100,13 @@ jobs:
           MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
           LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
 
-          PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
-          PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
+          JUPITER_API="https://lite-api.jup.ag/price/v3?ids=$MINT_TBTC,$MINT_NUMMUS"
+          JUPITER_RES=$(curl -s "$JUPITER_API")
+
+          echo "🔍 Jupiter response:" && echo "$JUPITER_RES" | jq
+
+          PRICE_TBTC=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_TBTC" '.[$id].price // 0')
+          PRICE_NUMMUS=$(echo "$JUPITER_RES" | jq -r --arg id "$MINT_NUMMUS" '.[$id].price // 0')
 
           VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
           VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
