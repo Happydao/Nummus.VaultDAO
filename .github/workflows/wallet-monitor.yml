@@ -97,8 +97,25 @@ jobs:
           }
 
           LAST_TBTC_W1=$(parse_transfers "$XFERS_W1_DEDUP" "$WALLET1" "$MINT_TBTC")
-          MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
-          LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
+          MERGED_W2=$(jq -s '
+            add
+            | unique_by(.signature)
+            | sort_by(.timestamp)
+            | reverse
+          ' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
+
+          LAST_TBTC_W2=$(echo "$MERGED_W2" | jq -c --arg M "$MINT_TBTC" --arg W "$WALLET2" '
+            [ .[]
+              | select(.tokenTransfers != null)
+              | . as $tx
+              | $tx.tokenTransfers[]
+              | select(.mint == $M and (.toUserAccount // "") == $W)
+              | {
+                  signature: $tx.signature,
+                  timestamp: ($tx.timestamp | todateiso8601),
+                  amount: "+" + (.tokenAmount | tostring)
+                }
+            ] | unique_by(.signature) | sort_by(.timestamp) | reverse | .[:30]')
 
           JUPITER_API="https://lite-api.jup.ag/price/v3?ids=$MINT_TBTC,$MINT_NUMMUS"
           JUPITER_RES=$(curl -s "$JUPITER_API")
@@ -200,4 +217,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC & NUMMUS prices and data" && git p
+          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC & NUMMUS prices and data" && git push)
