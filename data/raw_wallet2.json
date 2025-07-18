@@ -11346,6 +11346,73 @@
     "events": {}
   },
   {
+    "description": "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B transferred a total 0.000935 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+    "signature": "NcfNsJ8PDz3Gdu3fZgNoRhY3rcyewZ5sG8ZKq6sJLRN6Yir4N26EXVJ5xmLFVar3Pz2e14ky5dZF8cnPnSdT1uG",
+    "slot": 354176514,
+    "timestamp": 1752864769,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+        "toUserAccount": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "amount": 929000
+      },
+      {
+        "fromUserAccount": "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+        "toUserAccount": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "amount": 1000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+        "nativeBalanceChange": -935000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "nativeBalanceChange": 929000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "nativeBalanceChange": 1000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+          "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran"
+        ],
+        "data": "3Bxs4fh28pV76g3h",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoX6puxRv4c4dsX2oZBPMysKkk66o2zrKovTbeURjs5B",
+          "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+        ],
+        "data": "3Bxs4ffTu9T19DNF",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "G3Lr6W2dXExY5bDVBKoNkwZ2RvtoRB7eRyMFimmjBH3K minted 1.00 of token 6GxXMograftCKs5RgMN2xP3MRt1KNAzV2nB7kT1V97GV.",
     "type": "TOKEN_MINT",
     "source": "UNKNOWN",
