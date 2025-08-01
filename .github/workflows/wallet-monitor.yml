@@ -114,11 +114,19 @@ jobs:
           PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
           PRICE_BUMPER=$(curl -s "https://price.jup.ag/v4/price?ids=$MINT_BUMPER&vsToken=USDC" | jq -r '.data[].price // 0')
 
+          # Fallbacks per sicurezza
+          PRICE_TBTC=${PRICE_TBTC:-0}
+          PRICE_NUMMUS=${PRICE_NUMMUS:-0}
+          PRICE_BUMPER=${PRICE_BUMPER:-0}
+          TBTC_BAL_W1=${TBTC_BAL_W1:-0}
+          TBTC_BAL_W2=${TBTC_BAL_W2:-0}
+          BUMPER_BAL_W2=${BUMPER_BAL_W2:-0}
+
           VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
           VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          VALUE_BUMPER=$(awk "BEGIN {printf \"%.2f\", $BUMPER_BAL_W2 * $PRICE_BUMPER}")
           TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
           TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
-          VALUE_BUMPER=$(awk "BEGIN {printf \"%.2f\", $BUMPER_BAL_W2 * $PRICE_BUMPER}")
 
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
