@@ -26,16 +26,19 @@ jobs:
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
+          MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          MINT_SOL="So11111111111111111111111111111111111111112"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
           get_balance() {
             local WALLET=$1
+            local MINT=$2
             local OUTPUT=$(curl -s -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
               "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
               "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
               "options":{"showFungible":true,"showZeroBalance":false}}
             }')
-            local BAL_DEC=$(echo "$OUTPUT" | jq -r --arg M "$MINT_TBTC" '
+            local BAL_DEC=$(echo "$OUTPUT" | jq -r --arg M "$MINT" '
               .result.items[]? | select(.id == $M) |
               {bal: (.token_info.balance | tonumber), dec: (.token_info.decimals | tonumber)} |
               "\(.bal) \(.dec)"')
@@ -47,8 +50,9 @@ jobs:
             fi
           }
 
-          TBTC_BAL_W1=$(get_balance "$WALLET1")
-          TBTC_BAL_W2=$(get_balance "$WALLET2")
+          TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
+          TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
+          BUMPER_BAL_W2=$(get_balance "$WALLET2" "$MINT_BUMPER")
 
           fetch_transactions() {
             local WALLET=$1
@@ -107,23 +111,34 @@ jobs:
           MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
           LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
 
+          # === Prices ===
           PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
           PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
+          PRICE_SOL=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd" | jq -r '.solana.usd // 0')
 
-          VALUE_W1="0"
-          VALUE_W2="0"
-          TOTAL_TBTC="0"
-          TOTAL_VALUE="0"
+          # === Get BUMPER→SOL from Jupiter quote API ===
+          QUOTE_JSON=$(curl -s "https://quote-api.jup.ag/v6/quote?inputMint=$MINT_BUMPER&outputMint=$MINT_SOL&amount=1000000&slippage=1")
+          OUT_AMOUNT=$(echo "$QUOTE_JSON" | jq -r '.outAmount // "0"')
 
-          if [[ -n "$TBTC_BAL_W1" && -n "$PRICE_TBTC" ]]; then
-            VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
-          fi
-          if [[ -n "$TBTC_BAL_W2" && -n "$PRICE_TBTC" ]]; then
-            VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
-          fi
+          # Calculate BUMPER/SOL and then BUMPER/USD
+          SOL_PER_BUMPER=$(awk "BEGIN {printf \"%.12f\", $OUT_AMOUNT / 1000000000}")
+          PRICE_BUMPER=$(awk "BEGIN {printf \"%.8f\", $SOL_PER_BUMPER * $PRICE_SOL}")
+
+          # === Fallbacks ===
+          PRICE_TBTC=${PRICE_TBTC:-0}
+          PRICE_NUMMUS=${PRICE_NUMMUS:-0}
+          PRICE_BUMPER=${PRICE_BUMPER:-0}
+          TBTC_BAL_W1=${TBTC_BAL_W1:-0}
+          TBTC_BAL_W2=${TBTC_BAL_W2:-0}
+          BUMPER_BAL_W2=${BUMPER_BAL_W2:-0}
+
+          VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
+          VALUE_W2=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W2 * $PRICE_TBTC}")
+          VALUE_BUMPER=$(awk "BEGIN {printf \"%.2f\", $BUMPER_BAL_W2 * $PRICE_BUMPER}")
           TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
           TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
 
+          # === Write JSON ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
@@ -149,6 +164,9 @@ jobs:
           jq -n \
             --arg price "$PRICE_TBTC" \
             --arg nummus "$PRICE_NUMMUS" \
+            --arg bumper_price "$PRICE_BUMPER" \
+            --arg bumper_qty "$BUMPER_BAL_W2" \
+            --arg bumper_val "$VALUE_BUMPER" \
             --arg w1_bal "$TBTC_BAL_W1" \
             --arg w1_val "$VALUE_W1" \
             --arg w2_bal "$TBTC_BAL_W2" \
@@ -159,6 +177,12 @@ jobs:
             '{
               tbtc_price_usd: ($price | tonumber),
               nummus_price_usd: ($nummus | tonumber),
+              bumper: {
+                mint: "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+                price_usd: ($bumper_price | tonumber),
+                quantity: ($bumper_qty | tonumber),
+                total_value_usd: ($bumper_val | tonumber)
+              },
               total_tbtc_balance: ($total_bal | tonumber),
               total_usd_value: ($total_val | tonumber),
               wallet_1: {
@@ -172,7 +196,6 @@ jobs:
               timestamp: $time
             }' > data/prices.json
 
-
       - name: Run extended calculations (prices2.json)
         run: |
           chmod +x scripts/process_prices2.sh
@@ -182,4 +205,4 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC & NUMMUS prices and data" && git push)
+          git diff --quiet || (git add data/*.json && git commit -m "Update: tBTC, NUMMUS & BUMPER prices and data" && git push)
