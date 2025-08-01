@@ -36,12 +36,6 @@
       margin-bottom: 1.2rem;
       color: #ffd700;
     }
-    .totalsum {
-      text-align: center;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-      color: #ffd700;
-    }
     .github-logo {
       position: absolute;
       top: 20px;
@@ -172,8 +166,6 @@
     <div id="tbtc-price">tBTC: <strong>$--</strong></div>
   </div>
 
-  <div class="totalsum" id="total-info">Loading total...</div>
-
   <div class="container">
     <div class="card" id="swap-card">
       <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
@@ -197,7 +189,9 @@
       <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
         Nummus Aeternitas Vault DAO
       </a>
+      <p class="balance" id="vault-total-value"></p>
       <p class="balance"><strong>BALANCE:</strong> <span id="vault-balance">--</span></p>
+      <p class="balance" id="vault-bumper-info"></p>
       <div class="transfers" id="vault-transfers">Loading transactions...</div>
     </div>
   </div>
@@ -214,7 +208,10 @@
       .then(p => {
         document.getElementById('tbtc-price').innerHTML = `tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
         document.getElementById('nummus-price').innerHTML = `$NUMMUS: <strong>$${p.nummus_price_usd}</strong>`;
-        document.getElementById('total-info').innerHTML = `<strong>Total:</strong> ${p.total_tbtc_balance} tBTC ($${p.total_usd_value})`;
+
+        document.getElementById('vault-total-value').innerHTML = `<strong>TOTAL VALUE:</strong> $${p.total_usd_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const bumperQty = parseInt(p.bumper.quantity);
+        document.getElementById('vault-bumper-info').textContent = `${bumperQty.toLocaleString()} BUMPER ($${p.bumper.total_value_usd.toFixed(2)})`;
       })
       .catch(err => console.error('Error loading prices.json:', err));
 
