@@ -1,4 +1,4 @@
-name: Monitor Vault + Swap Events
+ name: Monitor Vault + Swap Events
 
 on:
   schedule:
@@ -27,6 +27,7 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          MINT_SOL="So11111111111111111111111111111111111111112"
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
           get_balance() {
@@ -110,11 +111,20 @@ jobs:
           MERGED_W2=$(jq -s 'add | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
           LAST_TBTC_W2=$(parse_transfers "$MERGED_W2" "$WALLET2" "$MINT_TBTC")
 
+          # === Prices ===
           PRICE_TBTC=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
           PRICE_NUMMUS=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
-          PRICE_BUMPER=$(curl -s "https://price.jup.ag/v4/price?ids=$MINT_BUMPER&vsToken=USDC" | jq -r '.data[].price // 0')
+          PRICE_SOL=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd" | jq -r '.solana.usd // 0')
 
-          # Fallbacks per sicurezza
+          # === Get BUMPER→SOL from Jupiter quote API ===
+          QUOTE_JSON=$(curl -s "https://quote-api.jup.ag/v6/quote?inputMint=$MINT_BUMPER&outputMint=$MINT_SOL&amount=1000000&slippage=1")
+          OUT_AMOUNT=$(echo "$QUOTE_JSON" | jq -r '.outAmount // "0"')
+
+          # Calculate BUMPER/SOL and then BUMPER/USD
+          SOL_PER_BUMPER=$(awk "BEGIN {printf \"%.12f\", $OUT_AMOUNT / 1000000000}")
+          PRICE_BUMPER=$(awk "BEGIN {printf \"%.8f\", $SOL_PER_BUMPER * $PRICE_SOL}")
+
+          # === Fallbacks ===
           PRICE_TBTC=${PRICE_TBTC:-0}
           PRICE_NUMMUS=${PRICE_NUMMUS:-0}
           PRICE_BUMPER=${PRICE_BUMPER:-0}
@@ -128,6 +138,7 @@ jobs:
           TOTAL_TBTC=$(awk "BEGIN {printf \"%.8f\", $TBTC_BAL_W1 + $TBTC_BAL_W2}")
           TOTAL_VALUE=$(awk "BEGIN {printf \"%.2f\", $VALUE_W1 + $VALUE_W2}")
 
+          # === Write JSON ===
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --argjson last1 "$LAST_TBTC_W1" \
