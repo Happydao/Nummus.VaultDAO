@@ -172,10 +172,6 @@ jobs:
               timestamp: $time
             }' > data/prices.json
 
-      - name: Run additional token script (onothers_token.sh)
-        run: |
-          chmod +x scripts/onothers_token.sh
-          ./scripts/onothers_token.sh
 
       - name: Run extended calculations (prices2.json)
         run: |
