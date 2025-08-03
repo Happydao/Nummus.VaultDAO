@@ -265317,6 +265317,73 @@
     "events": {}
   },
   {
+    "description": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s transferred a total 0.000935 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+    "signature": "XECbf8zooK3q9XTiw9hRSgS6vf6DSgFdh5dqXhmHdzJJCTd1JQeXNXmgsxA4Z1gEQD9t5yQWYQL9TgdWDrSJGCT",
+    "slot": 357639521,
+    "timestamp": 1754240941,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "toUserAccount": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "amount": 929000
+      },
+      {
+        "fromUserAccount": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "toUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "amount": 1000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "nativeBalanceChange": -935000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": 1000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "nativeBalanceChange": 929000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+          "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran"
+        ],
+        "data": "3Bxs4fh28pV76g3h",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "3Bxs4ffTu9T19DNF",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 100 NUMMUS to Gkm6GZ3eH3MoqbncHrVnDC5QyT5GkixPyrR2CCzAhNKN.",
     "type": "TRANSFER",
     "source": "SOLANA_PROGRAM_LIBRARY",
