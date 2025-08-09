@@ -102,27 +102,19 @@
     .realms img{width:36px;height:36px;display:block;margin-left:auto;margin-top:6px}
     footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 8px}
 
-    /* ===== Strip immagini a fondo pagina ===== */
-    .art-strip{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: clamp(16px, 2.4vw, 22px);
-      margin-top: clamp(14px, 2.4vw, 24px);
-      margin-bottom: clamp(16px, 3vw, 28px);
-      align-items: end;
+    /* ===== LEGIONARIO sotto la card SINISTRA ===== */
+    .under-left{
+      grid-column: 1;                 /* solo colonna 1 */
+      display: flex;
+      justify-content: center;        /* centra l'immagine sotto la card */
+      align-items: center;
+      margin-top: 2px;
     }
-    .art-strip img{
-      width: 100%; height: auto; display: block;
-      border-radius: var(--radius);
-      border: 1px solid var(--stroke);
-      box-shadow: var(--shadow);
-      background: rgba(255,255,255,0.02);
-    }
-    /* Riduci il legionario al 30% (−70%) e mantienilo a sinistra */
-    .art-strip img.legionario{
-      width: 30%;
-      justify-self: start;
-      align-self: end;
+    .under-left img{
+      /* 45% della larghezza colonna (prima era 30%) */
+      width: 45%;
+      height: auto;
+      display: block;
       border: none;
       box-shadow: none;
       background: transparent;
@@ -132,7 +124,6 @@
     /* ===== Override mobile: mantieni SEMPRE due colonne (stile desktop) ===== */
     @media (max-width:900px){
       .grid{grid-template-columns:1fr 1fr !important;}
-      .art-strip{grid-template-columns:1fr 1fr !important;}
     }
   </style>
 </head>
@@ -205,18 +196,16 @@
         </div>
         <div class="txs" id="vault-transfers">Loading transactions…</div>
       </article>
+
+      <!-- Legionario centrato sotto la card di sinistra -->
+      <figure class="under-left" aria-label="Legionario">
+        <img src="images/legionario.png" alt="Legionario">
+      </figure>
     </section>
 
     <footer>
       <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
     </footer>
-
-    <!-- ===== STRISCIA IMMAGINI A FONDO PAGINA ===== -->
-    <section class="art-strip" aria-label="Visuals">
-      <img class="legionario" src="images/legionario.png" alt="Legionario" loading="lazy" decoding="async">
-      <img class="resume" src="images/resume.jpg" alt="Vault resume" loading="lazy" decoding="async">
-    </section>
-    <!-- ============================================ -->
   </div>
 
   <script>
