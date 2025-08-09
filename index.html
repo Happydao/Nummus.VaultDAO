@@ -3,269 +3,285 @@
 <head>
   <meta charset="UTF-8" />
   <title>$NUMMUS → tBTC Monitor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      background-color: #292929;
-      background-image: url("data:image/svg+xml,%3Csvg width='42' height='44' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%23000000' fill-opacity='0.63'%3E%3Cpath d='M0 0h42v44H0V0zm1 1h40v20H1V1zM0 23h20v20H0V23zm22 0h20v20H22V23z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-      color: #f0e6d2;
-      font-family: 'Cinzel', serif;
-      margin: 0;
-      padding: 2rem;
-      position: relative;
+    :root{
+      --bg: #0b0b12;
+      --glass: rgba(255,255,255,0.06);
+      --stroke: rgba(255,255,255,0.18);
+      --text: #f4f6f8;
+      --muted:#b9c0c8;
+      --good:#78ffb2;
+      --bad:#ff6e6e;
+      --chipA:#78ffb2;
+      --chipB:#ff5fd2;
+      --chipC:#9ee8ff;
+      --link:#9ee8ff;
+      --shadow: 0 10px 35px rgba(0,0,0,.35);
+      --radius: 16px;
+      --pad: clamp(16px,2.4vw,24px);
+      --maxw: 1100px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 0.3rem;
-    }
-    .header img {
-      height: 85px;
-    }
-    .title-text {
-      color: #ffd700;
-      font-weight: 700;
-      font-size: 2.6rem;
-    }
-    .subtitle {
-      text-align: center;
-      font-size: 1.4rem;
-      margin-top: -0.3rem;
-      margin-bottom: 1.2rem;
-      color: #ffd700;
-    }
-    .github-logo {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-    .github-logo img {
-      width: 32px;
-      height: 32px;
-      opacity: 0.8;
-      transition: opacity 0.2s ease;
-    }
-    .github-logo img:hover {
-      opacity: 1;
-    }
-    .prices-under-logos {
-      display: flex;
-      justify-content: space-between;
-      margin: 0 auto 1.2rem auto;
-      max-width: 460px;
-      font-size: 0.95rem;
-      color: #ccc;
-      gap: 1rem;
-    }
-    .container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
-    .card {
-      background-color: rgba(30, 30, 30, 0.92);
-      border: 2px solid #bba76f;
-      border-radius: 10px;
-      padding: 1.5rem;
-      width: 360px;
-      box-shadow: 0 0 12px rgba(255, 215, 0, 0.15), 0 0 5px rgba(255, 255, 200, 0.2), inset 0 0 6px rgba(255, 255, 255, 0.05);
-      transition: transform 0.2s ease;
-      position: relative;
-    }
-    .card:hover {
-      transform: scale(1.01);
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), 0 0 8px rgba(255, 255, 200, 0.25), inset 0 0 10px rgba(255, 255, 255, 0.08);
-    }
-    .wallet-link {
-      display: block;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #ffd700;
-      text-decoration: none;
-      margin-bottom: 1.2rem;
-      text-align: center;
-    }
-    .wallet-link:hover {
-      text-decoration: underline;
-    }
-    .balance, .transfers {
-      text-align: left;
-    }
-    .token-line {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin: 0.4rem 0;
-    }
-    .token-line img {
-      width: 26px;
-      height: 26px;
-      opacity: 0.9;
-      vertical-align: middle;
-      margin-left: 6px;
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
-    strong {
-      font-weight: 700;
+    /* ambient background */
+    .bg{ position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:
+        radial-gradient(1200px 800px at 75% 0%, rgba(120,255,178,.20), transparent 60%),
+        radial-gradient(1000px 800px at 15% 15%, rgba(255,95,210,.18), transparent 65%),
+        radial-gradient(900px 900px at 20% 100%, rgba(125,160,255,.16), transparent 60%),
+        linear-gradient(180deg, rgba(6,8,18,.05), rgba(6,8,18,.55))
     }
-    .transfers {
-      font-family: monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin-top: 1.2rem;
+    .scan{ position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.06;
+      background-image: repeating-linear-gradient( to bottom, rgba(255,255,255,.1) 0, rgba(255,255,255,.1) 1px, transparent 1px, transparent 3px );
+      mix-blend-mode: overlay;
     }
-    #timestamp {
-      text-align: center;
-      font-size: 0.85rem;
-      margin-top: 2.5rem;
-      color: #aaa;
+
+    .wrap{ max-width: var(--maxw); margin: 0 auto; padding: var(--pad); }
+
+    /* header */
+    header{ display:grid; grid-template-columns: auto 1fr auto; align-items:center; gap:16px; margin-bottom: clamp(18px,3vw,30px); }
+    .brand{ display:flex; align-items:center; gap:14px; }
+    .brand img{ height:62px; width:auto; display:block; }
+    .title{ margin:0; line-height:1; letter-spacing:.5px;
+      font-size: clamp(26px,4.2vw,48px); font-weight:800; font-family:"Cinzel", serif;
+      background: linear-gradient(90deg,#fff 0%, #eafff6 45%, #ffd9f3 85%); -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-shadow:0 6px 24px rgba(0,0,0,.35);
     }
-    #timestamp .note {
-      font-style: italic;
-      color: #bbb;
+    .subtitle{ margin:.2rem 0 0 0; color:var(--muted); font-weight:600; letter-spacing:.3px; }
+
+    /* price chips + refresh */
+    .chips{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; }
+    .chip{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:999px; border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); box-shadow: var(--shadow);
+      font-weight:700; font-size:13px; color:var(--text);
     }
-    .image-section {
-      margin-top: 3rem;
-      display: flex;
-      justify-content: center;
+    .chip .dot{ width:10px; height:10px; border-radius:50%; }
+    .chip .val{ font-family: var(--mono); letter-spacing:.2px; }
+
+    .refresh{ margin-left:8px; cursor:pointer; border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      padding:10px 12px; border-radius:12px; font-weight:800; font-size:12px; color:var(--text);
     }
-    .image-section img {
-      width: 720px;
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-      border: 2px solid #bba76f;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+    .refresh:hover{ filter:brightness(1.05); transform: translateY(-1px); }
+
+    /* cards */
+    .grid{ display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: clamp(16px,2.4vw,22px); margin-top: clamp(14px,2.2vw,18px); }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{ position:relative; border-radius: var(--radius); background: var(--glass); border:1px solid var(--stroke);
+      padding: var(--pad); box-shadow: var(--shadow); overflow: hidden; isolation:isolate;
     }
-    .realms-badge {
-      position: absolute;
-      top: -40px;
-      right: 0px;
-      text-align: right;
-      z-index: 10;
+    .card::before{ content:""; position:absolute; inset:-2px; z-index:-1; filter: blur(22px); opacity:.12;
+      background: conic-gradient(from 200deg at 50% 50%, rgba(120,255,178,.40), rgba(255,95,210,.40), rgba(125,160,255,.40), rgba(120,255,178,.40));
     }
-    .realms-badge .badge-text a {
-      color: #ffd700;
-      font-size: 0.72rem;
-      font-weight: bold;
-      text-decoration: underline;
-      display: block;
-      line-height: 1.1;
+    .card h3{ margin:0 0 .4rem 0; font-size: clamp(18px,2.3vw,22px); }
+    .wallet-link{ display:inline-flex; align-items:center; gap:8px; color:var(--link); text-decoration:none; font-weight:700; }
+    .wallet-link svg{ width:16px; height:16px; }
+    .muted{ color:var(--muted); }
+
+    /* balances & lines */
+    .balances{ margin-top:12px; display:grid; gap:8px; }
+    .line{ display:flex; align-items:center; gap:10px; }
+    .line img{ width:22px; height:22px; opacity:.95; }
+    .kv{ display:flex; gap:8px; align-items: baseline; }
+    .k{ color:var(--muted); font-weight:700; font-size:12px; }
+    .v{ font-weight:800; }
+
+    /* transfers list */
+    .txs{ margin-top:14px; padding-top:10px; border-top:1px dashed rgba(255,255,255,.15); font-family: var(--mono); font-size: 12.5px; line-height:1.55; }
+    .tx{ display:flex; justify-content:space-between; gap:12px; }
+    .amt{ font-weight:800; }
+    .amt.pos{ color:var(--good); }
+    .amt.neg{ color:var(--bad); }
+
+    /* realms badge on vault card */
+    .realms{
+      position:absolute; top:10px; right:10px; text-align:right;
     }
-    .realms-badge img {
-      width: 40px;
-      height: 40px;
-      margin-top: 0px;
-      margin-left: 20px;
+    .realms a{ color:#ffd36b; text-decoration:underline; font-weight:800; font-size:11px; }
+    .realms img{ width:36px; height:36px; display:block; margin-left:auto; margin-top:6px; }
+
+    /* floating github */
+    .gh{
+      position:fixed; top:16px; right:16px; z-index:5;
+      display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border:1px solid var(--stroke); padding:9px 12px; border-radius:12px; font-weight:800; font-size:12px;
+      box-shadow: var(--shadow);
+    }
+    .gh img{ width:18px; height:18px; }
+
+    footer{ text-align:center; color:var(--muted); font-size:12px; margin: 22px 0 8px; }
+
+    /* reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .bg, .card::before{ animation:none !important; }
     }
   </style>
 </head>
 <body>
-  <a class="github-logo" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" title="View on GitHub">
-    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" />
+  <div class="bg"></div>
+  <div class="scan"></div>
+
+  <!-- GitHub link -->
+  <a class="gh" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" rel="noopener">
+    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub"> View on GitHub
   </a>
 
-  <div class="header">
-    <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
-    <div class="title-text">$NUMMUS → tBTC</div>
-    <img src="images/tbtc.png" alt="tBTC">
-  </div>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="images/LOGOnummus.200X200.png" alt="$NUMMUS">
+        <div>
+          <h1 class="title">$NUMMUS → tBTC</h1>
+          <div class="subtitle">Live on-chain monitor</div>
+        </div>
+        <img src="images/tbtc.png" alt="tBTC">
+      </div>
 
-  <div class="subtitle">MONITOR</div>
+      <div class="chips" aria-label="Prices">
+        <div class="chip"><span class="dot" style="background:var(--chipA)"></span> $NUMMUS <span class="val" id="nummus-price">$—</span></div>
+        <div class="chip"><span class="dot" style="background:var(--chipB)"></span> tBTC <span class="val" id="tbtc-price">$—</span></div>
+        <div class="chip"><span class="dot" style="background:var(--chipC)"></span> BUMPER <span class="val" id="bumper-price">$—</span></div>
+        <button class="refresh" id="refreshBtn" title="Reload data">Refresh</button>
+      </div>
 
-  <div class="prices-under-logos">
-    <div id="nummus-price">$NUMMUS: <strong>$--</strong></div>
-    <div id="tbtc-price">tBTC: <strong>$--</strong></div>
-    <div id="bumper-price">BUMPER: <strong>$--</strong></div>
-  </div>
+      <div><!-- spacer --></div>
+    </header>
 
-  <div class="container">
-    <div class="card" id="swap-card">
-      <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank">
-        tBTC Swap Wallet
-      </a>
-      <p class="balance"><span id="swap-balance">--</span></p>
-      <div class="transfers" id="swap-transfers">Loading transactions...</div>
-    </div>
+    <section class="grid">
+      <!-- Swap wallet -->
+      <article class="card" id="swap-card">
+        <h3>tBTC Swap Wallet</h3>
+        <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank" rel="noopener">
+          Open on Solscan
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
+        </a>
+        <div class="balances">
+          <div class="kv"><div class="k">Balance</div><div class="v" id="swap-balance">—</div></div>
+        </div>
+        <div class="txs" id="swap-transfers">Loading transactions…</div>
+      </article>
 
-    <div class="card" id="vault-card">
-      <div class="realms-badge">
-        <div class="badge-text">
-          <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank">
-            NUMMUS holder<br>voting platform
+      <!-- Vault wallet -->
+      <article class="card" id="vault-card">
+        <div class="realms">
+          <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">NUMMUS holder voting</a>
+          <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">
+            <img src="images/logo-realms.png" alt="Realms" />
           </a>
         </div>
-        <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank">
-          <img src="images/logo-realms.png" alt="Realms Logo" />
+
+        <h3>Nummus Aeternitas Vault DAO</h3>
+        <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
+          Open on Solscan
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
         </a>
-      </div>
-      <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank">
-        Nummus Aeternitas Vault DAO
-      </a>
-      <p class="balance" id="vault-total-value"></p>
-      <div class="token-line" id="vault-bumper-info"></div>
-      <div class="token-line" id="vault-balance"></div>
-      <div class="transfers" id="vault-transfers">Loading transactions...</div>
-    </div>
-  </div>
 
-  <div class="image-section">
-    <img src="images/resume.jpg" alt="Resume Image" />
-  </div>
+        <div class="balances">
+          <div class="kv"><div class="k">TOTAL VALUE</div><div class="v" id="vault-total-value">—</div></div>
+          <div class="line" id="vault-bumper-info"></div>
+          <div class="line" id="vault-balance"></div>
+        </div>
 
-  <p id="timestamp">⏳ Loading... <span class="note">(updates every hour, UTC)</span></p>
+        <div class="txs" id="vault-transfers">Loading transactions…</div>
+      </article>
+    </section>
+
+    <footer>
+      <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
+    </footer>
+  </div>
 
   <script>
-    fetch('data/prices.json')
-      .then(res => res.ok ? res.json() : Promise.reject('prices.json not found'))
-      .then(p => {
-        document.getElementById('tbtc-price').innerHTML = `tBTC: <strong>$${p.tbtc_price_usd}</strong>`;
-        document.getElementById('nummus-price').innerHTML = `$NUMMUS: <strong>$${p.nummus_price_usd}</strong>`;
-        document.getElementById('bumper-price').innerHTML = `BUMPER: <strong>$${p.bumper.price_usd}</strong>`;
+    async function loadPrices(){
+      const res = await fetch('data/prices.json', { cache:'no-store' });
+      if(!res.ok) throw new Error('prices.json not found');
+      const p = await res.json();
 
-        const bumperQty = parseInt(p.bumper.quantity);
-        document.getElementById('vault-total-value').innerHTML = `<strong>TOTAL VALUE:</strong> $${p.total_usd_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        document.getElementById('vault-bumper-info').innerHTML = `
-          <img src="images/bumper.png" alt="BUMPER Logo">
-          ${bumperQty.toLocaleString()} BUMPER ($${p.bumper.total_value_usd.toFixed(2)})
-        `;
-      })
-      .catch(err => console.error('Error loading prices.json:', err));
+      // top price chips
+      document.getElementById('tbtc-price').textContent   = `$${p.tbtc_price_usd}`;
+      document.getElementById('nummus-price').textContent = `$${p.nummus_price_usd}`;
+      document.getElementById('bumper-price').textContent = `$${p.bumper.price_usd}`;
 
-    fetch('data/status.json')
-      .then(res => res.ok ? res.json() : Promise.reject('status.json not found'))
-      .then(data => {
-        const b1 = data.wallet_1.tbtc_balance.toFixed(8);
-        const v1 = data.wallet_1.tbtc_usd_value.toFixed(2);
-        document.getElementById('swap-balance').textContent = `${b1} tBTC ($${v1})`;
+      // vault totals & bumper
+      const bumperQty = Number(p.bumper.quantity) || 0;
+      const totalUsd  = Number(p.total_usd_value) || 0;
+      const bumperVal = Number(p.bumper.total_value_usd) || 0;
 
-        const t1 = data.wallet_1.last_tbtc_transfers || [];
-        document.getElementById('swap-transfers').innerHTML = t1.length
-          ? t1.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
-          : 'No transactions found.';
+      document.getElementById('vault-total-value').textContent =
+        `$${totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-        const b2 = data.vault_wallet_2.tbtc_balance.toFixed(8);
-        const v2 = data.vault_wallet_2.tbtc_usd_value.toFixed(2);
-        document.getElementById('vault-balance').innerHTML = `
-          <img src="images/tbtc.png" alt="tBTC Logo">
-          ${b2} tBTC ($${v2})
-        `;
+      document.getElementById('vault-bumper-info').innerHTML = `
+        <img src="images/bumper.png" alt="BUMPER">
+        <span class="k">BUMPER</span>
+        <span class="v">${bumperQty.toLocaleString()} tokens</span>
+        <span class="muted">($${bumperVal.toFixed(2)})</span>
+      `;
+    }
 
-        const t2 = data.vault_wallet_2.last_tbtc_transfers || [];
-        document.getElementById('vault-transfers').innerHTML = t2.length
-          ? t2.map(t => `<div>${t.timestamp} — <strong style="color:${t.amount.startsWith('+') ? '#0f0' : '#f44'}">${t.amount}</strong></div>`).join('')
-          : 'No transactions found.';
+    function fmtTBTC(n){ return Number(n||0).toFixed(8); }
+    function fmtUSD(n){ return Number(n||0).toFixed(2); }
 
-        document.getElementById('timestamp').innerHTML =
-          'Last update: ' + data.timestamp + ' <span class="note">(updates every hour, UTC)</span>';
-      })
-      .catch(err => {
+    function renderTx(containerId, arr){
+      const el = document.getElementById(containerId);
+      if(!arr || !arr.length){ el.textContent = 'No transactions found.'; return; }
+      el.innerHTML = arr.map(t=>{
+        const a = String(t.amount||'0');
+        const pos = a.startsWith('+');
+        return `<div class="tx"><span class="muted">${t.timestamp}</span><span class="amt ${pos?'pos':'neg'}">${a}</span></div>`;
+      }).join('');
+    }
+
+    async function loadStatus(){
+      const res = await fetch('data/status.json', { cache:'no-store' });
+      if(!res.ok) throw new Error('status.json not found');
+      const d = await res.json();
+
+      // Swap wallet
+      const b1 = fmtTBTC(d.wallet_1.tbtc_balance);
+      const v1 = fmtUSD(d.wallet_1.tbtc_usd_value);
+      document.getElementById('swap-balance').textContent = `${b1} tBTC ($${v1})`;
+      renderTx('swap-transfers', d.wallet_1.last_tbtc_transfers);
+
+      // Vault wallet
+      const b2 = fmtTBTC(d.vault_wallet_2.tbtc_balance);
+      const v2 = fmtUSD(d.vault_wallet_2.tbtc_usd_value);
+      document.getElementById('vault-balance').innerHTML =
+        `<img src="images/tbtc.png" alt="tBTC"><span class="k">tBTC</span><span class="v">${b2}</span><span class="muted">($${v2})</span>`;
+
+      renderTx('vault-transfers', d.vault_wallet_2.last_tbtc_transfers);
+
+      // timestamp
+      document.getElementById('timestamp').innerHTML =
+        'Last update: ' + (d.timestamp || '—') + ' <span class="muted">(updates every hour, UTC)</span>';
+    }
+
+    async function loadAll(){
+      try{
+        await Promise.all([loadPrices(), loadStatus()]);
+      }catch(e){
+        console.error(e);
         document.getElementById('timestamp').textContent = '⚠️ Failed to load data';
-        console.error('Error loading status.json:', err);
-      });
+      }
+    }
+
+    // manual refresh
+    document.getElementById('refreshBtn').addEventListener('click', loadAll);
+
+    // boot
+    loadAll();
   </script>
 </body>
 </html>
