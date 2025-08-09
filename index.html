@@ -76,7 +76,6 @@
 
     /* ===== MAIN ===== */
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.4vw,22px);margin-top:clamp(14px,2.2vw,18px)}
-    /* (in origine su mobile diventava 1 colonna; lasciamo la media query ma la sovrascriviamo sotto) */
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
 
     .card{position:relative;border-radius:var(--radius);background:var(--glass);border:1px solid var(--stroke);
@@ -110,7 +109,7 @@
       gap: clamp(16px, 2.4vw, 22px);
       margin-top: clamp(14px, 2.4vw, 24px);
       margin-bottom: clamp(16px, 3vw, 28px);
-      align-items: end; /* allinea alla base per un bordo pulito */
+      align-items: end;
     }
     .art-strip img{
       width: 100%; height: auto; display: block;
@@ -119,11 +118,14 @@
       box-shadow: var(--shadow);
       background: rgba(255,255,255,0.02);
     }
-    /* Il legionario è PNG su sfondo trasparente: niente riempimento visivo extra */
-    .art-strip .legionario{
-      background: transparent;
+    /* Riduci il legionario al 30% (−70%) e mantienilo a sinistra */
+    .art-strip img.legionario{
+      width: 30%;
+      justify-self: start;
+      align-self: end;
       border: none;
       box-shadow: none;
+      background: transparent;
       filter: drop-shadow(0 10px 24px rgba(0,0,0,.45));
     }
 
