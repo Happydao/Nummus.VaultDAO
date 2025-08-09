@@ -15,11 +15,6 @@
       --shadow:0 10px 35px rgba(0,0,0,.35); --radius:16px;
       --pad:clamp(16px,2.4vw,24px); --maxw:1100px; --mono:ui-monospace,Menlo,Consolas,monospace;
       --chip-py:7px; --chip-px:10px; --chip-font:11px; --chip-radius:999px;
-
-      /* ===== Posizionamento legionario (solo queste tre per affinare) ===== */
-      --hero-w: clamp(80px, 10vw, 120px);      /* grandezza */
-      --hero-top: 86px;                        /* distanza dall’alto della .wrap */
-      --hero-left: calc(50% + 80px);           /* orizzontale verso "→ tBTC" */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -33,7 +28,7 @@
     .scan{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.06;
       background-image:repeating-linear-gradient(to bottom, rgba(255,255,255,.1) 0, rgba(255,255,255,.1) 1px, transparent 1px, transparent 3px);
       mix-blend-mode:overlay}
-    .wrap{max-width:var(--maxw);margin:0 auto;padding:var(--pad); position:relative;} /* <- relative per l’overlay */
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:var(--pad)}
 
     /* ===== HEADER ===== */
     header{
@@ -79,22 +74,11 @@
     }
     .pill svg,.pill img{width:18px;height:18px;display:block}
 
-    /* ===== LEGIONARIO (overlay sotto il titolo) ===== */
-    .hero{
-      position:absolute;
-      top: var(--hero-top);
-      left: var(--hero-left);
-      width: var(--hero-w);
-      height: auto;
-      pointer-events:none; user-select:none;
-      filter: drop-shadow(0 10px 24px rgba(0,0,0,.45));
-      opacity:.98;
-      z-index: 0; /* dietro alle pill/chips ma sopra lo sfondo */
-    }
-
     /* ===== MAIN ===== */
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.4vw,22px);margin-top:clamp(14px,2.2vw,18px)}
+    /* (in origine su mobile diventava 1 colonna; lasciamo la media query ma la sovrascriviamo sotto) */
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
     .card{position:relative;border-radius:var(--radius);background:var(--glass);border:1px solid var(--stroke);
       padding:var(--pad);box-shadow:var(--shadow);overflow:hidden;isolation:isolate}
     .card::before{content:"";position:absolute;inset:-2px;z-index:-1;filter:blur(22px);opacity:.12;
@@ -119,7 +103,7 @@
     .realms img{width:36px;height:36px;display:block;margin-left:auto;margin-top:6px}
     footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 8px}
 
-    /* ===== Mantieni SEMPRE due colonne (stile desktop) sotto i 900px ===== */
+    /* ===== Override mobile: mantieni SEMPRE due colonne (stile desktop) ===== */
     @media (max-width:900px){
       .grid{grid-template-columns:1fr 1fr !important;}
     }
@@ -161,9 +145,6 @@
         </a>
       </div>
     </header>
-
-    <!-- ===== LEGIONARIO: piccolo, sotto al titolo (overlay) ===== -->
-    <img class="hero" src="images/legionario.png" alt="" aria-hidden="true" loading="eager" decoding="async" />
 
     <section class="grid">
       <article class="card" id="swap-card">
