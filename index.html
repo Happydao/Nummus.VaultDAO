@@ -103,9 +103,34 @@
     .realms img{width:36px;height:36px;display:block;margin-left:auto;margin-top:6px}
     footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 8px}
 
+    /* ===== Strip immagini a fondo pagina ===== */
+    .art-strip{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(16px, 2.4vw, 22px);
+      margin-top: clamp(14px, 2.4vw, 24px);
+      margin-bottom: clamp(16px, 3vw, 28px);
+      align-items: end; /* allinea alla base per un bordo pulito */
+    }
+    .art-strip img{
+      width: 100%; height: auto; display: block;
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background: rgba(255,255,255,0.02);
+    }
+    /* Il legionario è PNG su sfondo trasparente: niente riempimento visivo extra */
+    .art-strip .legionario{
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,.45));
+    }
+
     /* ===== Override mobile: mantieni SEMPRE due colonne (stile desktop) ===== */
     @media (max-width:900px){
       .grid{grid-template-columns:1fr 1fr !important;}
+      .art-strip{grid-template-columns:1fr 1fr !important;}
     }
   </style>
 </head>
@@ -183,6 +208,13 @@
     <footer>
       <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
     </footer>
+
+    <!-- ===== STRISCIA IMMAGINI A FONDO PAGINA ===== -->
+    <section class="art-strip" aria-label="Visuals">
+      <img class="legionario" src="images/legionario.png" alt="Legionario" loading="lazy" decoding="async">
+      <img class="resume" src="images/resume.jpg" alt="Vault resume" loading="lazy" decoding="async">
+    </section>
+    <!-- ============================================ -->
   </div>
 
   <script>
