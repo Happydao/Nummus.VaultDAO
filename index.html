@@ -13,6 +13,7 @@
       --chipA:#78ffb2; --chipB:#ff5fd2; --chipC:#9ee8ff; --link:#9ee8ff;
       --shadow:0 10px 35px rgba(0,0,0,.35); --radius:16px;
       --pad:clamp(16px,2.4vw,24px); --maxw:1100px; --mono:ui-monospace,Menlo,Consolas,monospace;
+      --chip-py:7px; --chip-px:10px; --chip-font:11px; --chip-radius:999px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -27,33 +28,57 @@
       background-image:repeating-linear-gradient(to bottom, rgba(255,255,255,.1) 0, rgba(255,255,255,.1) 1px, transparent 1px, transparent 3px);
       mix-blend-mode:overlay}
     .wrap{max-width:var(--maxw);margin:0 auto;padding:var(--pad)}
-    header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;margin-bottom:clamp(18px,3vw,30px)}
+
+    /* ===== HEADER ===== */
+    header{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center; gap:16px;
+      margin-bottom:clamp(18px,3vw,30px)
+    }
     .brand{display:flex;align-items:center;gap:14px}
-    .brand img{height:84px;width:auto;display:block} /* +33% */
+    .brand img{height:84px;width:auto;display:block}
     .title{margin:0;line-height:1;letter-spacing:.5px;font-size:clamp(26px,4.2vw,48px);font-weight:800;font-family:"Cinzel",serif;
       background:linear-gradient(90deg,#fff 0%,#eafff6 45%,#ffd9f3 85%);-webkit-background-clip:text;background-clip:text;color:transparent;
       text-shadow:0 6px 24px rgba(0,0,0,.35)}
     .subtitle{margin:.2rem 0 0 0;color:var(--muted);font-weight:600;letter-spacing:.3px}
 
-    /* top links (GitHub, X, Site) */
-    .toplinks{display:flex;gap:10px;align-items:center}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;
-      background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
-      border:1px solid var(--stroke);color:var(--text);text-decoration:none;font-weight:800;font-size:12px;box-shadow:var(--shadow)}
-    .pill svg,.pill img{width:18px;height:18px;display:block}
-
-    /* price chips (smaller ~25%) */
+    /* price chips (riga centrale) */
     .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
-    .chip{display:inline-flex;align-items:center;gap:8px;
-      padding:7px 10px;border-radius:999px;border:1px solid var(--stroke);
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:var(--chip-py) var(--chip-px);
+      border-radius:var(--chip-radius);
+      border:1px solid var(--stroke);
       background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
-      box-shadow:var(--shadow);font-weight:700;font-size:11px;color:var(--text)}
+      box-shadow:var(--shadow);font-weight:700;font-size:var(--chip-font);color:var(--text)
+    }
     .chip .dot{width:8px;height:8px;border-radius:50%}
     .chip .val{font-family:var(--mono);letter-spacing:.2px}
 
+    /* link pills: ORA impilate a destra e allineate in verticale
+       altezza della colonna = altezza della riga .chips (settata via JS) */
+    .toplinks{
+      display:flex;flex-direction:column;gap:8px;
+      align-items:flex-end; /* aderiscono a destra */
+      justify-content:center; /* distribuite verticalmente (regolato da JS) */
+      align-self:stretch; /* la cella si estende per allinearsi */
+      height:auto; /* JS la imposta */
+    }
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:var(--chip-py) var(--chip-px);
+      border-radius:var(--chip-radius);
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
+      color:var(--text);text-decoration:none;font-weight:700;font-size:var(--chip-font);
+      box-shadow:var(--shadow)
+    }
+    .pill svg,.pill img{width:18px;height:18px;display:block}
+
+    /* ===== MAIN ===== */
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(16px,2.4vw,22px);margin-top:clamp(14px,2.2vw,18px)}
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
-
     .card{position:relative;border-radius:var(--radius);background:var(--glass);border:1px solid var(--stroke);
       padding:var(--pad);box-shadow:var(--shadow);overflow:hidden;isolation:isolate}
     .card::before{content:"";position:absolute;inset:-2px;z-index:-1;filter:blur(22px);opacity:.12;
@@ -62,24 +87,20 @@
     .wallet-link{display:inline-flex;align-items:center;gap:8px;color:var(--link);text-decoration:none;font-weight:700}
     .wallet-link svg{width:16px;height:16px}
     .muted{color:var(--muted)}
-
     .balances{margin-top:12px;display:grid;gap:8px}
     .line{display:flex;align-items:center;gap:10px}
     .line img{width:22px;height:22px;opacity:.95}
     .kv{display:flex;gap:8px;align-items:baseline}
     .k{color:var(--muted);font-weight:700;font-size:12px}
     .v{font-weight:800}
-
     .txs{margin-top:14px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.15);font-family:var(--mono);font-size:12.5px;line-height:1.55}
     .tx{display:flex;justify-content:space-between;gap:12px}
     .amt{font-weight:800}
     .amt.pos{color:var(--good)}
     .amt.neg{color:var(--bad)}
-
     .realms{position:absolute;top:10px;right:10px;text-align:right}
     .realms a{color:#ffd36b;text-decoration:underline;font-weight:800;font-size:11px}
     .realms img{width:36px;height:36px;display:block;margin-left:auto;margin-top:6px}
-
     footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 8px}
   </style>
 </head>
@@ -104,18 +125,16 @@
         <div class="chip"><span class="dot" style="background:var(--chipC)"></span> BUMPER <span class="val" id="bumper-price">$—</span></div>
       </div>
 
+      <!--  PILL IMPIALATE A DESTRA  -->
       <div class="toplinks">
-        <!-- GitHub -->
         <a class="pill" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" rel="noopener" aria-label="View on GitHub">
           <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="">
           GitHub
         </a>
-        <!-- X / Twitter -->
         <a class="pill" href="https://x.com/NummusMemeCoin" target="_blank" rel="noopener" aria-label="Nummus on X">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2H21l-6.52 7.45L22 22h-6.93l-4.56-5.96L4.3 22H1.54l6.98-7.97L2 2h7l4.11 5.5L18.244 2Zm-2.42 18h2.08L8.26 4H6.18l9.644 16Z"/></svg>
           X
         </a>
-        <!-- Website -->
         <a class="pill" href="https://nummus.meme" target="_blank" rel="noopener" aria-label="nummus.meme website">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.08a14.7 14.7 0 0 0-1.1-5.01A8.02 8.02 0 0 1 19.93 11ZM12 4c.88 0 2.44 2.2 2.9 6H9.1C9.56 6.2 11.12 4 12 4ZM6.25 5.99A14.7 14.7 0 0 0 5.15 11H2.07a8.02 8.02 0 0 1 4.18-5.01ZM4.07 13h3.08c.2 1.86.74 3.64 1.6 5.01A8.02 8.02 0 0 1 4.07 13ZM12 20c-.88 0-2.44-2.2-2.9-6h5.8c-.46 3.8-2.02 6-2.9 6Zm3.25-1.99c.86-1.37 1.4-3.15 1.6-5.01h3.08a8.02 8.02 0 0 1-4.68 5.01Z"/></svg>
           Site
@@ -143,19 +162,16 @@
             <img src="images/logo-realms.png" alt="Realms" />
           </a>
         </div>
-
         <h3>Nummus Aeternitas Vault DAO</h3>
         <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
           Open on Solscan
           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
         </a>
-
         <div class="balances">
           <div class="kv"><div class="k">TOTAL VALUE</div><div class="v" id="vault-total-value">—</div></div>
           <div class="line" id="vault-bumper-info"></div>
           <div class="line" id="vault-balance"></div>
         </div>
-
         <div class="txs" id="vault-transfers">Loading transactions…</div>
       </article>
     </section>
@@ -166,6 +182,17 @@
   </div>
 
   <script>
+    // Make the right column (toplinks) match the chips row height and distribute pills vertically
+    function syncToplinksHeight(){
+      const chips = document.querySelector('.chips');
+      const links = document.querySelector('.toplinks');
+      if(!chips || !links) return;
+      links.style.height = chips.offsetHeight + 'px';
+      links.style.justifyContent = 'space-between';
+    }
+    window.addEventListener('load', syncToplinksHeight);
+    window.addEventListener('resize', syncToplinksHeight);
+
     async function loadPrices(){
       const res = await fetch('data/prices.json', { cache:'no-store' });
       if(!res.ok) throw new Error('prices.json not found');
@@ -187,11 +214,11 @@
         <span class="k">BUMPER</span>
         <span class="v">${bumperQty.toLocaleString()} tokens</span>
         <span class="muted">($${bumperVal.toFixed(2)})</span>`;
+      syncToplinksHeight();
     }
 
     function fmtTBTC(n){ return Number(n||0).toFixed(8); }
     function fmtUSD(n){ return Number(n||0).toFixed(2); }
-
     function renderTx(containerId, arr){
       const el = document.getElementById(containerId);
       if(!arr || !arr.length){ el.textContent = 'No transactions found.'; return; }
@@ -200,7 +227,6 @@
         return `<div class="tx"><span class="muted">${t.timestamp}</span><span class="amt ${pos?'pos':'neg'}">${a}</span></div>`;
       }).join('');
     }
-
     async function loadStatus(){
       const res = await fetch('data/status.json', { cache:'no-store' });
       if(!res.ok) throw new Error('status.json not found');
@@ -219,9 +245,17 @@
 
       document.getElementById('timestamp').innerHTML =
         'Last update: ' + (d.timestamp || '—') + ' <span class="muted">(updates every hour, UTC)</span>';
+      syncToplinksHeight();
     }
 
-    (async function init(){ try{ await Promise.all([loadPrices(), loadStatus()]); }catch(e){ console.error(e); document.getElementById('timestamp').textContent='⚠️ Failed to load data'; }})();
+    (async function init(){
+      try{
+        await Promise.all([loadPrices(), loadStatus()]);
+      }catch(e){
+        console.error(e);
+        document.getElementById('timestamp').textContent='⚠️ Failed to load data';
+      }
+    })();
   </script>
 </body>
 </html>
