@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- Forza layout desktop anche su mobile (si può zoomare) -->
-  <meta name="viewport" content="width=1280, initial-scale=1, minimum-scale=0.3, maximum-scale=5, user-scalable=yes" />
+  <!-- Layout desktop anche su mobile; l’utente può zoomare -->
+  <meta name="viewport" content="width=1280,initial-scale=1,minimum-scale=0.3,maximum-scale=5,user-scalable=yes" />
   <title>NUMMUS → tBTC Monitor</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
@@ -13,10 +13,8 @@
       --stroke: rgba(255,255,255,.16);
       --text:#f4f6fb; --muted:#adb7c9;
       --good:#78ffb2; --bad:#ff6b6b;
-      --chip:#0e1320; --chipStroke:rgba(255,255,255,.18);
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --shadow:0 12px 30px rgba(0,0,0,.35);
       --radius:16px;
-      --accent:#c6ffea;
     }
     *{ box-sizing:border-box }
     html,body{ height:100% }
@@ -30,229 +28,195 @@
         linear-gradient(180deg, var(--bg1), var(--bg2));
       min-width: 1200px; /* non collassare su mobile */
     }
-    .wrap{ max-width: 1280px; margin:0 auto; padding:28px 22px 40px; position:relative; }
 
-    /* Header */
-    .header{ display:flex; align-items:center; justify-content:flex-start; gap:18px; }
-    .logo{ width:74px; height:74px; border-radius:999px; overflow:hidden; flex:0 0 auto;
-      box-shadow: 0 10px 24px rgba(0,0,0,.4);
+    .wrap{ max-width:1320px; margin:0 auto; padding:26px 22px 40px; position:relative; }
+
+    /* ====== HEADER ====== */
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:18px; margin-bottom:18px;
     }
+    .brand{ display:flex; align-items:center; gap:16px }
+    .logo{ width:74px; height:74px; border-radius:999px; overflow:hidden; box-shadow:0 10px 24px rgba(0,0,0,.4) }
     .logo img{ width:100%; height:100%; object-fit:cover }
-    .titleBox{ display:flex; flex-direction:column; gap:6px; }
-    .title{
+    .ttl h1{
       margin:0; letter-spacing:.6px;
-      font-family: "Cinzel", serif; font-weight:700;
-      font-size: 56px; line-height:1;
+      font-family:"Cinzel", serif; font-weight:700; font-size:56px; line-height:1;
       background: linear-gradient(90deg, #fff 0%, #eafff9 45%, #ffd9f3 85%);
       -webkit-background-clip:text; background-clip:text; color:transparent;
-      text-shadow: 0 10px 32px rgba(0,0,0,.35);
+      text-shadow:0 10px 32px rgba(0,0,0,.35);
     }
-    .subtitle{ margin:0; color:var(--muted); font-weight:700; letter-spacing:.2px }
+    .ttl .sub{ margin:6px 0 0; color:var(--muted); font-weight:700; letter-spacing:.2px }
 
-    /* Chips prezzi */
-    .chips{
-      display:flex; gap:12px; align-items:center;
-      position:absolute; right:230px; top:26px;
-    }
+    .chips{ display:flex; gap:12px; align-items:center; }
     .chip{
       display:inline-flex; align-items:center; gap:10px;
       padding:10px 14px; border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--chipStroke);
-      box-shadow: var(--shadow);
-      font-weight:800; font-size:13px; white-space:nowrap;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.18);
+      box-shadow:var(--shadow); font-weight:800; font-size:13px; white-space:nowrap;
     }
     .dot{ width:8px; height:8px; border-radius:50% }
-    .dot--green{ background:#66ff9c }
-    .dot--pink{ background:#ff83d8 }
-    .dot--cyan{ background:#83f5ff }
+    .g{ background:#66ff9c } .p{ background:#ff83d8 } .c{ background:#83f5ff }
 
-    /* Colonna azioni a destra (impilata) */
-    .actions-col{
-      position:absolute; right:22px; top:22px;
-      display:flex; flex-direction:column; gap:10px;
-      width: 168px;
+    /* ====== GRIGLIA PRINCIPALE (stabile) ====== */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 180px; /* sinistra, destra, sidebar */
+      grid-column-gap:22px;
+      grid-auto-rows:auto;
+      align-items:start;
     }
+    /* header sopra tutta la griglia */
+    .grid-header{ grid-column:1 / 4 }
+
+    /* sidebar link impilati */
+    .actions{ grid-column:3; display:flex; flex-direction:column; gap:10px }
     .action{
-      display:flex; align-items:center; gap:10px; justify-content:center;
+      display:flex; align-items:center; justify-content:center; gap:10px;
       padding:11px 12px; border-radius:12px;
-      background: rgba(255,255,255,.08);
-      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.08); border:1px solid var(--stroke);
       color:var(--text); text-decoration:none; font-weight:800; font-size:13px;
-      box-shadow: var(--shadow);
-      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      box-shadow:var(--shadow); transition:transform .18s ease, border-color .18s ease;
     }
-    .action:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.28) }
-    .action svg, .action img{ width:16px; height:16px; }
+    .action:hover{ transform:translateY(-1px); border-color:rgba(255,255,255,.28) }
+    .action svg{ width:16px; height:16px }
 
-    /* Cards */
-    .cols{ display:flex; gap:22px; margin-top:24px; }
+    /* cards */
     .card{
-      flex:1 1 0; min-width:0; position:relative;
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--stroke);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      background:rgba(255,255,255,.06); border:1px solid var(--stroke);
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+      position:relative;
     }
-    .card::before{
-      content:""; position:absolute; inset:-2px;
-      background: radial-gradient(900px 500px at 20% -10%, rgba(120,255,178,.18), transparent 60%);
-      opacity:.14; pointer-events:none;
-    }
-    .card .pad{ padding:22px 22px 18px }
+    .pad{ padding:22px 22px 18px }
     .card h2{ margin:0 0 6px; font-size:28px; letter-spacing:.2px }
     .ext{ display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-weight:800; text-decoration:none }
     .ext svg{ width:16px; height:16px; opacity:.9 }
-
-    .meta-line{
-      display:flex; align-items:center; gap:12px; color:var(--muted);
-      font-weight:800; font-size:13px; margin-top:10px; padding-top:12px;
-      border-top:1px dashed rgba(255,255,255,.12);
-    }
-
+    .meta{ display:flex; align-items:center; gap:12px; color:var(--muted);
+           font-weight:800; font-size:13px; margin-top:10px; padding-top:12px;
+           border-top:1px dashed rgba(255,255,255,.12) }
     .balance{ margin:14px 0 10px; font-weight:900; font-size:18px; letter-spacing:.2px }
-    .txs{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; line-height:1.65;
-          padding:14px 22px 22px; max-height:520px; overflow:auto; }
-    .txs .row{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
-    .plus{ color:var(--good); font-weight:900 }
-    .minus{ color:var(--bad); font-weight:900 }
-
-    /* Legionario overlay */
-    .hero-legionario{
-      position:absolute; z-index:5; pointer-events:none; user-select:none;
-      filter: drop-shadow(0 12px 24px rgba(0,0,0,.45)); opacity:.98;
-      width: 300px; /* verrà ridimensionato da JS */
-      transition: width .12s ease;
-    }
+    .txs{ font-family: ui-monospace, Menlo, Consolas, monospace; font-size:13px; line-height:1.65;
+          padding:14px 22px 22px; max-height:520px; overflow:auto }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:16px }
+    .plus{ color:var(--good); font-weight:900 } .minus{ color:var(--bad); font-weight:900 }
 
     /* badge Realms */
-    .realms{
-      position:absolute; top:10px; right:12px; display:flex; align-items:center; gap:10px;
-      font-size:12px; font-weight:900;
+    .realms{ position:absolute; top:10px; right:12px; font-size:12px; font-weight:900 }
+    .realms a{ color:#ffd36e; text-decoration:underline }
+
+    /* ====== LEGIONARIO (50% PIÙ PICCOLO) ====== */
+    .hero{
+      position:absolute; z-index:5; pointer-events:none; user-select:none;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,.45)); opacity:.98;
+      width: 160px; /* base ~50% del precedente 300px */
+      transition: width .12s ease, transform .12s ease, top .12s ease, left .12s ease;
     }
-    .realms a{ color:#ffd36e; text-decoration:underline; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- Header -->
-    <div class="header">
-      <div class="logo"><img src="images/LOGOnummus.200X200.png" alt="NUMMUS"></div>
-      <div class="titleBox">
-        <h1 class="title">NUMMUS → TBTC</h1>
-        <div class="subtitle">Live on-chain monitor</div>
+    <div class="grid">
+      <!-- HEADER -->
+      <div class="grid-header header">
+        <div class="brand">
+          <div class="logo"><img src="images/LOGOnummus.200X200.png" alt="NUMMUS"></div>
+          <div class="ttl">
+            <h1>NUMMUS → TBTC</h1>
+            <div class="sub">Live on-chain monitor</div>
+          </div>
+        </div>
+        <div class="chips">
+          <div class="chip" id="chip-nummus"><span class="dot g"></span> NUMMUS&nbsp;<span class="v">$0.00</span></div>
+          <div class="chip" id="chip-tbtc"><span class="dot p"></span> tBTC&nbsp;<span class="v">$0.00</span></div>
+          <div class="chip" id="chip-bumper"><span class="dot c"></span> BUMPER&nbsp;<span class="v">$0.00000000</span></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Chips prezzi -->
-    <div class="chips" aria-label="Prices">
-      <div class="chip" id="chip-nummus"><span class="dot dot--green"></span> NUMMUS&nbsp; <span class="v">$0.00</span></div>
-      <div class="chip" id="chip-tbtc"><span class="dot dot--pink"></span> tBTC&nbsp; <span class="v">$0.00</span></div>
-      <div class="chip" id="chip-bumper"><span class="dot dot--cyan"></span> BUMPER&nbsp; <span class="v">$0.00000000</span></div>
-    </div>
-
-    <!-- Azioni impilate -->
-    <aside class="actions-col" aria-label="Links">
-      <a class="action" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" rel="noopener">
-        <!-- GitHub icon -->
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.11.79-.25.79-.56v-2c-3.19.7-3.86-1.37-3.86-1.37-.53-1.35-1.3-1.71-1.3-1.71-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.73 1.26 3.39.96.11-.76.41-1.26.75-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.19a11.1 11.1 0 0 1 5.82 0c2.22-1.5 3.2-1.19 3.2-1.19.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.42-2.69 5.39-5.25 5.67.42.36.8 1.08.8 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
-        GitHub
-      </a>
-      <a class="action" href="https://x.com/NummusMemeCoin" target="_blank" rel="noopener">
-        <!-- X icon -->
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 3h3.2l-7 8.02L22 21h-5.5l-4.3-5.6L7.2 21H4l7.6-8.72L2 3h5.6l3.9 5.14L17.5 3Zm-1.2 16h1.77L7.8 5H6.02L16.3 19Z"/></svg>
-        X / Twitter
-      </a>
-      <a class="action" href="https://nummus.meme" target="_blank" rel="noopener">
-        <!-- globe -->
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.03a16.7 16.7 0 0 0-1.2-5.03A8.03 8.03 0 0 1 19.93 11ZM12 4c.9 1.2 1.77 3.15 2.27 5H9.73C10.23 7.15 11.1 5.2 12 4Zm-3.7-.03A16.7 16.7 0 0 0 7.1 11H4.07A8.03 8.03 0 0 1 8.3 3.97ZM4.07 13H7.1c.23 2 .87 3.86 1.2 5.03A8.03 8.03 0 0 1 4.07 13ZM12 20c-.9-1.2-1.77-3.15-2.27-5h4.54C13.77 16.85 12.9 18.8 12 20Zm3.7.03c.33-1.17.97-3.03 1.2-5.03h3.03a8.03 8.03 0 0 1-4.23 5.03ZM18.9 11c-.23-2-.87-3.86-1.2-5.03A8.03 8.03 0 0 1 19.93 11H18.9Z"/></svg>
-        Site
-      </a>
-    </aside>
-
-    <!-- HERO overlay (sopra la card sinistra) -->
-    <img class="hero-legionario" src="images/legionario.png" alt="" aria-hidden="true" loading="eager" decoding="async">
-
-    <!-- Colonne -->
-    <section class="cols">
-      <!-- Card sinistra -->
-      <article class="card" id="swap-card">
+      <!-- CARD SINISTRA -->
+      <article class="card" id="swap-card" style="grid-column:1">
         <div class="pad">
           <h2>tBTC Swap Wallet</h2>
           <a class="ext" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank" rel="noopener">
             <span>Open on Solscan</span>
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
           </a>
-
           <div class="balance" id="swap-balance">Balance —</div>
-          <div class="meta-line">Recent transfers</div>
+          <div class="meta">Recent transfers</div>
         </div>
         <div class="txs" id="swap-transfers">Loading…</div>
       </article>
 
-      <!-- Card destra -->
-      <article class="card" id="vault-card">
+      <!-- CARD DESTRA -->
+      <article class="card" id="vault-card" style="grid-column:2">
         <div class="pad">
           <h2>Nummus Aeternitas Vault DAO</h2>
           <a class="ext" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
             <span>Open on Solscan</span>
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
           </a>
+          <div class="realms"><a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">NUMMUS holder voting</a></div>
 
-          <div class="realms">
-            <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">NUMMUS holder voting</a>
-            <img src="images/logo-realms.png" alt="Realms" width="22" height="22">
-          </div>
-
-          <div class="meta-line">TOTAL VALUE&nbsp; <strong id="vault-total-usd">$0.00</strong></div>
-
+          <div class="meta">TOTAL VALUE&nbsp;<strong id="vault-total-usd">$0.00</strong></div>
           <div class="pad" style="padding-top:10px">
             <div style="display:flex; gap:18px; flex-wrap:wrap; font-weight:900;">
-              <div>🪙&nbsp;BUMPER&nbsp; <span id="vault-bumper-qty">—</span> tokens <span style="color:var(--muted)">(<span id="vault-bumper-usd">$0.00</span>)</span></div>
-              <div>₿&nbsp;tBTC&nbsp; <span id="vault-tbtc-amt">—</span> <span style="color:var(--muted)">(<span id="vault-tbtc-usd">$0.00</span>)</span></div>
+              <div>🪙 BUMPER&nbsp;<span id="vault-bumper-qty">—</span> tokens
+                <span style="color:var(--muted)">(<span id="vault-bumper-usd">$0.00</span>)</span></div>
+              <div>₿ tBTC&nbsp;<span id="vault-tbtc-amt">—</span>
+                <span style="color:var(--muted)">(<span id="vault-tbtc-usd">$0.00</span>)</span></div>
             </div>
           </div>
-
-          <div class="meta-line">Recent incoming tBTC</div>
+          <div class="meta">Recent incoming tBTC</div>
         </div>
         <div class="txs" id="vault-transfers">Loading…</div>
       </article>
-    </section>
+
+      <!-- SIDEBAR LINK IMPILATI -->
+      <aside class="actions" aria-label="Links">
+        <a class="action" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.11.79-.25.79-.56v-2c-3.19.7-3.86-1.37-3.86-1.37-.53-1.35-1.3-1.71-1.3-1.71-1.06-.73.08-.72.08-.72 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.73 1.26 3.39.96.11-.76.41-1.26.75-1.55-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.19a11.1 11.1 0 0 1 5.82 0c2.22-1.5 3.2-1.19 3.2-1.19.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.42-2.69 5.39-5.25 5.67.42.36.8 1.08.8 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+          GitHub
+        </a>
+        <a class="action" href="https://x.com/NummusMemeCoin" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.5 3h3.2l-7 8.02L22 21h-5.5l-4.3-5.6L7.2 21H4l7.6-8.72L2 3h5.6l3.9 5.14L17.5 3Zm-1.2 16h1.77L7.8 5H6.02L16.3 19Z"/></svg>
+          X / Twitter
+        </a>
+        <a class="action" href="https://nummus.meme" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.03a16.7 16.7 0 0 0-1.2-5.03A8.03 8.03 0 0 1 19.93 11ZM12 4c.9 1.2 1.77 3.15 2.27 5H9.73C10.23 7.15 11.1 5.2 12 4Zm-3.7-.03A16.7 16.7 0 0 0 7.1 11H4.07A8.03 8.03 0 0 1 8.3 3.97ZM4.07 13H7.1c.23 2 .87 3.86 1.2 5.03A8.03 8.03 0 0 1 4.07 13ZM12 20c-.9-1.2-1.77-3.15-2.27-5h4.54C13.77 16.85 12.9 18.8 12 20Zm3.7.03c.33-1.17.97-3.03 1.2-5.03h3.03a8.03 8.03 0 0 1-4.23 5.03Z"/></svg>
+          Site
+        </a>
+      </aside>
+    </div>
+
+    <!-- LEGIONARIO overlay (molto più piccolo) -->
+    <img class="hero" src="images/legionario.png" alt="" aria-hidden="true" loading="eager" decoding="async">
   </div>
 
   <script>
-    // ---- Helpers ----
-    const $ = (sel)=> document.querySelector(sel);
+    const $ = s => document.querySelector(s);
     const fmtUsd = (n, p=2)=> Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD', minimumFractionDigits:p, maximumFractionDigits:p});
     const fmtNum = (n, p=8)=> Number(n||0).toLocaleString(undefined,{ minimumFractionDigits:0, maximumFractionDigits:p });
 
-    // ---- Carica prezzi ----
     async function loadPrices(){
       try{
-        const r = await fetch('data/prices.json', { cache:'no-store' });
-        if(!r.ok) throw new Error('prices.json');
+        const r = await fetch('data/prices.json',{cache:'no-store'});
+        if(!r.ok) throw 0;
         const p = await r.json();
-
-        $('#chip-nummus .v').textContent   = fmtUsd(p.nummus_price_usd, 6);
-        $('#chip-tbtc .v').textContent     = fmtUsd(p.tbtc_price_usd, 2);
-        $('#chip-bumper .v').textContent   = fmtUsd(p.bumper?.price_usd ?? 0, 8);
-
-        // Vault figures
-        $('#vault-total-usd').textContent   = fmtUsd(p.total_usd_value, 2);
-        $('#vault-bumper-qty').textContent  = fmtNum(p.bumper?.quantity ?? 0, 0);
-        $('#vault-bumper-usd').textContent  = fmtUsd(p.bumper?.total_value_usd ?? 0, 2);
-      }catch(e){ console.warn(e); }
+        $('#chip-nummus .v').textContent = fmtUsd(p.nummus_price_usd, 6);
+        $('#chip-tbtc .v').textContent   = fmtUsd(p.tbtc_price_usd, 2);
+        $('#chip-bumper .v').textContent = fmtUsd(p.bumper?.price_usd ?? 0, 8);
+        // Vault totals
+        $('#vault-total-usd').textContent  = fmtUsd(p.total_usd_value, 2);
+        $('#vault-bumper-qty').textContent = fmtNum(p.bumper?.quantity ?? 0, 0);
+        $('#vault-bumper-usd').textContent = fmtUsd(p.bumper?.total_value_usd ?? 0, 2);
+      }catch(e){}
     }
 
-    // ---- Carica status ----
     async function loadStatus(){
       try{
-        const r = await fetch('data/status.json', { cache:'no-store' });
-        if(!r.ok) throw new Error('status.json');
+        const r = await fetch('data/status.json',{cache:'no-store'});
+        if(!r.ok) throw 0;
         const s = await r.json();
 
-        // Swap wallet
         const b1 = Number(s.wallet_1?.tbtc_balance ?? 0);
         const v1 = Number(s.wallet_1?.tbtc_usd_value ?? 0);
         $('#swap-balance').textContent = `Balance  ${fmtNum(b1,8)} tBTC (${fmtUsd(v1,2)})`;
@@ -265,7 +229,6 @@
             }).join('')
           : 'No transactions found.';
 
-        // Vault wallet
         const b2 = Number(s.vault_wallet_2?.tbtc_balance ?? 0);
         const v2 = Number(s.vault_wallet_2?.tbtc_usd_value ?? 0);
         $('#vault-tbtc-amt').textContent = fmtNum(b2,8);
@@ -276,35 +239,32 @@
           ? t2.map(row=>`<div class="row"><span>${row.timestamp}</span><span class="plus">${row.amount}</span></div>`).join('')
           : 'No transactions found.';
       }catch(e){
-        console.warn(e);
-        $('#swap-transfers').textContent  = 'Failed to load.';
-        $('#vault-transfers').textContent = 'Failed to load.';
+        $('#swap-transfers').textContent='Failed to load.';
+        $('#vault-transfers').textContent='Failed to load.';
       }
     }
 
-    // ---- Legionario overlay positioning ----
+    // Posizionamento legionario (sopra card sinistra, orientato verso TBTC)
     function positionHero(){
-      const hero = document.querySelector('.hero-legionario');
+      const hero = document.querySelector('.hero');
+      const swap = document.getElementById('swap-card');
       const wrap = document.querySelector('.wrap');
-      const card = document.getElementById('swap-card');
-      if(!hero || !wrap || !card) return;
+      if(!hero || !swap || !wrap) return;
 
       const wr = wrap.getBoundingClientRect();
-      const cr = card.getBoundingClientRect();
+      const cr = swap.getBoundingClientRect();
 
-      // Larghezza dinamica ~46% della card sinistra (clamp 220–340)
-      const w = Math.max(220, Math.min(340, cr.width * 0.46));
+      // Larghezza ~23% della card sinistra (CLAMP 120–180) -> ~50% rispetto a prima
+      const w = Math.max(120, Math.min(180, cr.width * 0.23));
       hero.style.width = w + 'px';
 
-      // Posiziona sopra-a-destra della card sinistra, guardando il titolo "TBTC"
-      const top  = cr.top  - wr.top  - w * 0.18;   // alza/abbassa regolando coefficiente
-      const left = cr.right - wr.left - w + 10;    // sposta a dx/sx cambiando offset
+      // Posizione: parte alta-destra della card sinistra
+      const top  = cr.top  - wr.top  - w * 0.10;   // alza/abbassa
+      const left = cr.right - wr.left - w + 8;     // dx/sx
 
       hero.style.top  = top  + 'px';
       hero.style.left = left + 'px';
     }
-
-    // Ricalcola su resize/scroll e dopo i caricamenti dati
     ['load','resize','scroll'].forEach(ev=> window.addEventListener(ev, positionHero, { passive:true }));
 
     (async function init(){
