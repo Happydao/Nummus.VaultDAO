@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>NUMMUS → tBTC Monitor</title>
-  <!-- Forza resa desktop anche su mobile; lo zoom resta possibile -->
   <meta name="viewport" content="width=1100, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
@@ -33,7 +32,7 @@
     /* ===== HEADER ===== */
     header{
       display:grid;
-      grid-template-columns:auto 1fr auto; /* logo/titolo | chips | colonna pill */
+      grid-template-columns:auto 1fr auto;
       align-items:center; gap:16px;
       margin-bottom:clamp(18px,3vw,30px)
     }
@@ -44,7 +43,7 @@
       text-shadow:0 6px 24px rgba(0,0,0,.35)}
     .subtitle{margin:.2rem 0 0 0;color:var(--muted);font-weight:600;letter-spacing:.3px}
 
-    /* price chips (riga centrale) - ridotte ~1/4 */
+    /* price chips */
     .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
     .chip{
       display:inline-flex;align-items:center;gap:8px;
@@ -57,7 +56,7 @@
     .chip .dot{width:8px;height:8px;border-radius:50%}
     .chip .val{font-family:var(--mono);letter-spacing:.2px}
 
-    /* colonna link: impilata e allineata in verticale; altezza agganciata alle chips via JS */
+    /* colonna link (destra) */
     .toplinks{
       display:flex;flex-direction:column;gap:8px;
       align-items:flex-end; justify-content:center;
@@ -102,26 +101,26 @@
     .realms img{width:36px;height:36px;display:block;margin-left:auto;margin-top:6px}
     footer{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 8px}
 
-    /* ===== LEGIONARIO sotto la card SINISTRA ===== */
-    .under-left{
-      grid-column: 1;                 /* solo colonna 1 */
-      display: flex;
-      justify-content: center;        /* centra l'immagine sotto la card */
-      align-items: center;
-      margin-top: 2px;
+    /* ===== IMMAGINI SOTTO LE CARDS ===== */
+    .under-left,
+    .under-right{
+      display:flex;justify-content:center;align-items:center;
+      margin-top:2px;
     }
+    .under-left{ grid-column:1; }
+    .under-right{ grid-column:2; }
     .under-left img{
-      /* 45% della larghezza colonna (prima era 30%) */
-      width: 45%;
-      height: auto;
-      display: block;
-      border: none;
-      box-shadow: none;
-      background: transparent;
+      width:45%; height:auto; display:block;
       filter: drop-shadow(0 10px 24px rgba(0,0,0,.45));
+      background:transparent; border:none;
+    }
+    .under-right img{
+      width:90%; height:auto; display:block;
+      border-radius:12px;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
     }
 
-    /* ===== Override mobile: mantieni SEMPRE due colonne (stile desktop) ===== */
+    /* Mantieni due colonne anche su mobile */
     @media (max-width:900px){
       .grid{grid-template-columns:1fr 1fr !important;}
     }
@@ -197,9 +196,14 @@
         <div class="txs" id="vault-transfers">Loading transactions…</div>
       </article>
 
-      <!-- Legionario centrato sotto la card di sinistra -->
+      <!-- Sotto la card sinistra: Legionario -->
       <figure class="under-left" aria-label="Legionario">
         <img src="images/legionario.png" alt="Legionario">
+      </figure>
+
+      <!-- Sotto la card destra: Resume image -->
+      <figure class="under-right" aria-label="Resume image">
+        <img src="images/resume.jpg" alt="Resume">
       </figure>
     </section>
 
@@ -209,7 +213,6 @@
   </div>
 
   <script>
-    // Colonna dei link: stessa altezza della riga chips, con distribuzione verticale
     function syncToplinksHeight(){
       const chips = document.querySelector('.chips');
       const links = document.querySelector('.toplinks');
