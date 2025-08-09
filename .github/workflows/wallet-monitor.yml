@@ -5,15 +5,6 @@ on:
     - cron: '0 * * * *'   # ogni ora (UTC)
   workflow_dispatch:
 
-# Serve a poter pushare i JSON aggiornati
-permissions:
-  contents: write
-
-# Evita run sovrapposti se uno job impiega più di 1h
-concurrency:
-  group: monitor-vault-swap-events
-  cancel-in-progress: true
-
 jobs:
   monitor:
     runs-on: ubuntu-latest
@@ -22,20 +13,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Install tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq curl
+        run: sudo apt-get update && sudo apt-get install -y jq curl
 
-      - name: Fetch balances, prices, and transactions (robust)
+      - name: Fetch balances, prices, and transactions
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p data
 
-          # ====== CONFIG ======
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
 
@@ -45,13 +33,13 @@ jobs:
 
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # ====== HELPERS ======
+          # -------- Helpers robusti --------
+
           get_balance() {
             local WALLET=$1
             local MINT=$2
-
-            local OUT
-            OUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 25 -X POST "$API_RPC" \
+            local OUTPUT
+            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 25 -X POST "$API_RPC" \
               -H "Content-Type: application/json" \
               -d '{
                 "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
@@ -59,12 +47,12 @@ jobs:
                 "options":{"showFungible":true,"showZeroBalance":false}}
               }' || true)
 
-            if ! jq -e . >/dev/null 2>&1 <<<"$OUT"; then
+            if ! jq -e . >/dev/null 2>&1 <<<"$OUTPUT"; then
               echo "0.00000000"; return
             fi
 
             local BAL_DEC
-            BAL_DEC=$(echo "$OUT" | jq -r --arg M "$MINT" '
+            BAL_DEC=$(echo "$OUTPUT" | jq -r --arg M "$MINT" '
               (.result.items // [])[]
               | select(.id == $M)
               | {bal: (.token_info.balance|tostring), dec: (.token_info.decimals|tostring)}
@@ -78,6 +66,7 @@ jobs:
             fi
           }
 
+          # Restituisce SEMPRE un array (se errore API -> [])
           fetch_page() {
             local URL=$1
             local RES
@@ -89,48 +78,55 @@ jobs:
             fi
           }
 
+          # Paginazione sicura (fino a ~800 tx)
           fetch_transactions() {
             local WALLET=$1
-            local LAST=""
-            local ALL="[]"
-            for i in {1..8}; do  # fino a ~800 tx
+            local LAST_SIG=""
+            local ALL_TXS="[]"
+            for i in {1..8}; do
               local URL="https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100"
-              [ -n "$LAST" ] && URL="$URL&before=$LAST"
+              [ -n "$LAST_SIG" ] && URL="$URL&before=$LAST_SIG"
               local PAGE
               PAGE=$(fetch_page "$URL")
-              # aggiungi solo se è un array (evita errori "array and object cannot be added")
-              ALL=$(jq -s '[.[] | select(type=="array")] | add // []' <<<"$ALL $PAGE")
-              LAST=$(jq -r '.[-1].signature // empty' <<<"$PAGE")
-              [ -z "$LAST" ] && break
+              ALL_TXS=$(jq -s '[.[] | select(type=="array")] | add // []' <<< "$ALL_TXS $PAGE")
+              LAST_SIG=$(echo "$PAGE" | jq -r '.[-1].signature // empty')
+              [ -z "$LAST_SIG" ] && break
             done
-            echo "$ALL"
+            echo "$ALL_TXS"
           }
 
+          # Parse tBTC transfers con amount come STRINGA con segno (compatibile col tuo index)
           parse_transfers() {
-            local DATA="$1" WALLET="$2" MINT="$3"
+            local DATA="$1"
+            local WALLET="$2"
+            local MINT="$3"
             jq -c --arg M "$MINT" --arg W "$WALLET" '
               [ .[]? as $tx
                 | ($tx.tokenTransfers // [])[]
                 | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
                 | {
                     signature: $tx.signature,
-                    timestamp: ((($tx.timestamp // 0) | tonumber) | todateiso8601),
-                    direction: ( if ((.toUserAccount // "") == $W) then "in" else "out" end ),
-                    amount: (.tokenAmount | tonumber)
+                    # ordina su timestamp numerico, ma esporta ISO
+                    timestamp_num: (($tx.timestamp // 0) | tonumber),
+                    amount: (
+                      (if ((.toUserAccount // "") == $W) then "+" else "-" end)
+                      + ((.tokenAmount | tonumber) | tostring)
+                    )
                   }
               ]
               | unique_by(.signature)
-              | sort_by(.timestamp) | reverse
+              | sort_by(.timestamp_num) | reverse
               | .[:30]
+              | map({signature, timestamp: (.timestamp_num | todateiso8601), amount})
             ' <<<"$DATA" 2>/dev/null || echo '[]'
           }
 
-          # ====== BALANCES ======
+          # -------- Bilanci --------
           TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
           TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
           BUMPER_BAL_W2=$(get_balance "$WALLET2" "$MINT_BUMPER")
 
-          # ====== TX (merge cross-wallet per ENTRAMBI) ======
+          # -------- Transazioni (merge cross-wallet per ENTRAMBI) --------
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
@@ -140,20 +136,22 @@ jobs:
           MERGED_ALL=$(jq -s '[.[] | select(type=="array")] | add // [] | unique_by(.signature)' \
             <<<"$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
 
-          # debug quick look
-          echo "$MERGED_ALL" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$MERGED_ALL" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
+          # salvataggi debug (come avevi)
+          echo "$XFERS_W1_DEDUP" > data/raw_wallet1.json
+          echo "$XFERS_W2_DEDUP" > data/raw_wallet2.json
           echo "$MERGED_ALL" > data/raw_wallets_merged.json
 
-          LAST_TBTC_W1_JSON=$(parse_transfers "$MERGED_ALL" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2_JSON=$(parse_transfers "$MERGED_ALL" "$WALLET2" "$MINT_TBTC")
+          echo "$XFERS_W1_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
+          echo "$XFERS_W2_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          # ====== PRICES ======
+          LAST_TBTC_W1=$(parse_transfers "$MERGED_ALL" "$WALLET1" "$MINT_TBTC")
+          LAST_TBTC_W2=$(parse_transfers "$MERGED_ALL" "$WALLET2" "$MINT_TBTC")
+
+          # -------- Prezzi --------
           PRICE_TBTC=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
           PRICE_NUMMUS=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
           PRICE_SOL=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd" | jq -r '.solana.usd // 0')
 
-          # NOTE: amount=1_000_000 assume BUMPER con 6 decimali => 1.0 BUMPER.
           QUOTE_JSON=$(curl -sS --retry 3 --retry-delay 2 "https://quote-api.jup.ag/v6/quote?inputMint=$MINT_BUMPER&outputMint=$MINT_SOL&amount=1000000&slippage=1" || echo '{}')
           OUT_AMOUNT=$(echo "$QUOTE_JSON" | jq -r '.outAmount // "0"')
 
@@ -165,14 +163,14 @@ jobs:
           VALUE_BUMPER=$(awk "BEGIN {printf \"%.2f\", $BUMPER_BAL_W2 * $PRICE_BUMPER}")
           TOTAL_USD_VAULT=$(awk "BEGIN {printf \"%.2f\", $VALUE_W2 + $VALUE_BUMPER}")
 
-          # ====== OUTPUT JSON (safe fromjson) ======
+          # -------- Output JSON (compatibile con index) --------
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
+            --arg last1 "$LAST_TBTC_W1" \
             --arg tbtc2 "$TBTC_BAL_W2" \
+            --arg last2 "$LAST_TBTC_W2" \
             --arg val1 "$VALUE_W1" \
             --arg val2 "$VALUE_W2" \
-            --arg last1 "$LAST_TBTC_W1_JSON" \
-            --arg last2 "$LAST_TBTC_W2_JSON" \
             --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
               wallet_1: {
@@ -204,20 +202,26 @@ jobs:
               tbtc_price_usd: ($price | tonumber),
               nummus_price_usd: ($nummus | tonumber),
               bumper: {
-                mint: "'"$MINT_BUMPER"'",
+                mint: "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
                 price_usd: ($bumper_price | tonumber),
                 quantity: ($bumper_qty | tonumber),
                 total_value_usd: ($bumper_val | tonumber)
               },
-              wallet_1: { tbtc_balance: ($w1_bal | tonumber), tbtc_usd_value: ($w1_val | tonumber) },
-              wallet_2: { tbtc_balance: ($w2_bal | tonumber), tbtc_usd_value: ($w2_val | tonumber) },
+              wallet_1: {
+                tbtc_balance: ($w1_bal | tonumber),
+                tbtc_usd_value: ($w1_val | tonumber)
+              },
+              wallet_2: {
+                tbtc_balance: ($w2_bal | tonumber),
+                tbtc_usd_value: ($w2_val | tonumber)
+              },
               total_usd_value: ($total_vault_usd | tonumber),
               timestamp: $time
             }' > data/prices.json
 
       - name: Run extended calculations (prices2.json)
-        shell: bash
         run: |
+          chmod +x scripts/process_prices2.sh || true
           if [ -x scripts/process_prices2.sh ]; then
             ./scripts/process_prices2.sh
           else
@@ -226,12 +230,6 @@ jobs:
 
       - name: Commit if changed
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          if ! git diff --quiet; then
-            git add data/*.json
-            git commit -m "Update: vault balances, tx, prices (hourly)"
-            git push
-          else
-            echo "No changes."
-          fi
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git diff --quiet || (git add data/*.json && git commit -m "Update: vault total USD value + BUMPER prices" && git push)
