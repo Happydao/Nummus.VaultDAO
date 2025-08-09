@@ -26,26 +26,24 @@ jobs:
 
           WALLET1="AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
-
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
           MINT_SOL="So11111111111111111111111111111111111111112"
-
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-          # -------- Helpers robusti --------
+          # >>> NEW: profondità e limit della paginazione
+          HELIUS_PAGES=40     # 40*100 = ~4.000 tx per wallet; aumenta se ti serve più storia
+          HELIUS_LIMIT=100    # per pagina
 
           get_balance() {
             local WALLET=$1
             local MINT=$2
             local OUTPUT
-            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 25 -X POST "$API_RPC" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-                "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
-                "options":{"showFungible":true,"showZeroBalance":false}}
-              }' || true)
+            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 25 -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+              "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
+              "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
+              "options":{"showFungible":true,"showZeroBalance":false}}
+            }' || true)
 
             if ! jq -e . >/dev/null 2>&1 <<<"$OUTPUT"; then
               echo "0.00000000"; return
@@ -53,20 +51,18 @@ jobs:
 
             local BAL_DEC
             BAL_DEC=$(echo "$OUTPUT" | jq -r --arg M "$MINT" '
-              (.result.items // [])[]
-              | select(.id == $M)
-              | {bal: (.token_info.balance|tostring), dec: (.token_info.decimals|tostring)}
-              | "\(.bal) \(.dec)"
-            ' | head -n1)
+              (.result.items // [])[]? | select(.id == $M) |
+              {bal: (.token_info.balance | tostring), dec: (.token_info.decimals | tostring)} |
+              "\(.bal) \(.dec)"' | head -n1)
 
             if [ -n "$BAL_DEC" ]; then
-              awk '{ if ($1 && $2) printf "%.8f", $1 / (10 ^ $2); else print "0.00000000" }' <<<"$BAL_DEC"
+              echo "$BAL_DEC" | awk '{ if ($1 && $2) printf "%.8f", $1 / (10 ^ $2); else print "0.00000000" }'
             else
               echo "0.00000000"
             fi
           }
 
-          # Restituisce SEMPRE un array (se errore API -> [])
+          # Ritorna SEMPRE un array (se l'API torna un oggetto errore -> [])
           fetch_page() {
             local URL=$1
             local RES
@@ -78,16 +74,22 @@ jobs:
             fi
           }
 
-          # Paginazione sicura (fino a ~800 tx)
+          # >>> NEW: paginazione profonda + early stop su pagina vuota
           fetch_transactions() {
             local WALLET=$1
-            local LAST_SIG=""
             local ALL_TXS="[]"
-            for i in {1..8}; do
-              local URL="https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=100"
+            local LAST_SIG=""
+            for ((i=1; i<=HELIUS_PAGES; i++)); do
+              local URL="https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=$HELIUS_LIMIT"
               [ -n "$LAST_SIG" ] && URL="$URL&before=$LAST_SIG"
               local PAGE
               PAGE=$(fetch_page "$URL")
+
+              # se la pagina è vuota, fermati
+              if [ "$(jq 'length' <<<"$PAGE")" -eq 0 ]; then
+                break
+              fi
+
               ALL_TXS=$(jq -s '[.[] | select(type=="array")] | add // []' <<< "$ALL_TXS $PAGE")
               LAST_SIG=$(echo "$PAGE" | jq -r '.[-1].signature // empty')
               [ -z "$LAST_SIG" ] && break
@@ -95,18 +97,17 @@ jobs:
             echo "$ALL_TXS"
           }
 
-          # Parse tBTC transfers con amount come STRINGA con segno (compatibile col tuo index)
           parse_transfers() {
             local DATA="$1"
             local WALLET="$2"
             local MINT="$3"
             jq -c --arg M "$MINT" --arg W "$WALLET" '
-              [ .[]? as $tx
+              [ .[]?
+                | . as $tx
                 | ($tx.tokenTransfers // [])[]
                 | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
                 | {
                     signature: $tx.signature,
-                    # ordina su timestamp numerico, ma esporta ISO
                     timestamp_num: (($tx.timestamp // 0) | tonumber),
                     amount: (
                       (if ((.toUserAccount // "") == $W) then "+" else "-" end)
@@ -121,33 +122,28 @@ jobs:
             ' <<<"$DATA" 2>/dev/null || echo '[]'
           }
 
-          # -------- Bilanci --------
           TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
           TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
           BUMPER_BAL_W2=$(get_balance "$WALLET2" "$MINT_BUMPER")
 
-          # -------- Transazioni (merge cross-wallet per ENTRAMBI) --------
           XFERS_W1=$(fetch_transactions "$WALLET1")
           XFERS_W2=$(fetch_transactions "$WALLET2")
 
           XFERS_W1_DEDUP=$(echo "$XFERS_W1" | jq 'unique_by(.signature)')
           XFERS_W2_DEDUP=$(echo "$XFERS_W2" | jq 'unique_by(.signature)')
 
-          MERGED_ALL=$(jq -s '[.[] | select(type=="array")] | add // [] | unique_by(.signature)' \
-            <<<"$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
+          MERGED_WALLETS=$(jq -s '[.[] | select(type=="array")] | add // [] | unique_by(.signature)' <<< "$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
 
-          # salvataggi debug (come avevi)
           echo "$XFERS_W1_DEDUP" > data/raw_wallet1.json
           echo "$XFERS_W2_DEDUP" > data/raw_wallet2.json
-          echo "$MERGED_ALL" > data/raw_wallets_merged.json
+          echo "$MERGED_WALLETS" > data/raw_wallets_merged.json
 
           echo "$XFERS_W1_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
           echo "$XFERS_W2_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
-          LAST_TBTC_W1=$(parse_transfers "$MERGED_ALL" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2=$(parse_transfers "$MERGED_ALL" "$WALLET2" "$MINT_TBTC")
+          LAST_TBTC_W1=$(parse_transfers "$MERGED_WALLETS" "$WALLET1" "$MINT_TBTC")
+          LAST_TBTC_W2=$(parse_transfers "$MERGED_WALLETS" "$WALLET2" "$MINT_TBTC")
 
-          # -------- Prezzi --------
           PRICE_TBTC=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" | jq -r '.tbtc.usd // 0')
           PRICE_NUMMUS=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" | jq -r '."nummus-aeternitas".usd // 0')
           PRICE_SOL=$(curl -sS --retry 3 --retry-delay 2 "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd" | jq -r '.solana.usd // 0')
@@ -155,7 +151,7 @@ jobs:
           QUOTE_JSON=$(curl -sS --retry 3 --retry-delay 2 "https://quote-api.jup.ag/v6/quote?inputMint=$MINT_BUMPER&outputMint=$MINT_SOL&amount=1000000&slippage=1" || echo '{}')
           OUT_AMOUNT=$(echo "$QUOTE_JSON" | jq -r '.outAmount // "0"')
 
-          SOL_PER_BUMPER=$(awk "BEGIN {printf \"%.12f\", $OUT_AMOUNT / 1000000000}")   # lamports -> SOL
+          SOL_PER_BUMPER=$(awk "BEGIN {printf \"%.12f\", $OUT_AMOUNT / 1000000000}")
           PRICE_BUMPER=$(awk "BEGIN {printf \"%.8f\", $SOL_PER_BUMPER * $PRICE_SOL}")
 
           VALUE_W1=$(awk "BEGIN {printf \"%.2f\", $TBTC_BAL_W1 * $PRICE_TBTC}")
@@ -163,7 +159,6 @@ jobs:
           VALUE_BUMPER=$(awk "BEGIN {printf \"%.2f\", $BUMPER_BAL_W2 * $PRICE_BUMPER}")
           TOTAL_USD_VAULT=$(awk "BEGIN {printf \"%.2f\", $VALUE_W2 + $VALUE_BUMPER}")
 
-          # -------- Output JSON (compatibile con index) --------
           jq -n \
             --arg tbtc1 "$TBTC_BAL_W1" \
             --arg last1 "$LAST_TBTC_W1" \
@@ -221,12 +216,8 @@ jobs:
 
       - name: Run extended calculations (prices2.json)
         run: |
-          chmod +x scripts/process_prices2.sh || true
-          if [ -x scripts/process_prices2.sh ]; then
-            ./scripts/process_prices2.sh
-          else
-            echo "scripts/process_prices2.sh not found or not executable — skipping."
-          fi
+          chmod +x scripts/process_prices2.sh
+          ./scripts/process_prices2.sh
 
       - name: Commit if changed
         run: |
