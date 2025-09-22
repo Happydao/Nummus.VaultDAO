@@ -2593,6 +2593,73 @@
     "events": {}
   },
   {
+    "description": "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT transferred a total 0.00095 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+    "signature": "2dNi8oGqUXnonL4X3zAbUuyXL2dQgayxRqcz23yMhnUbqRhhfLi9iyANY5VeAN4ghkTK86dCt6hA6gXSqCxaM6V",
+    "slot": 368468608,
+    "timestamp": 1758526057,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+        "toUserAccount": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "amount": 10000
+      },
+      {
+        "fromUserAccount": "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+        "toUserAccount": "FapY3GMgKjNcf6y8K9YrP7TVzfWziqVTCDpWcmAEooaf",
+        "amount": 935000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+        "nativeBalanceChange": -950000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "FapY3GMgKjNcf6y8K9YrP7TVzfWziqVTCDpWcmAEooaf",
+        "nativeBalanceChange": 935000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "nativeBalanceChange": 10000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+          "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+        ],
+        "data": "3Bxs43ZMjSRQLs6o",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJXfE3KiEPz6oA1tz4osmn27jWmCcr5xmf8SCPZ1JT",
+          "FapY3GMgKjNcf6y8K9YrP7TVzfWziqVTCDpWcmAEooaf"
+        ],
+        "data": "3Bxs4Fcx2M8hu7Cj",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "",
     "type": "UNKNOWN",
     "source": "UNKNOWN",
