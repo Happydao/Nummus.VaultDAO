@@ -428,35 +428,6 @@
       filter:drop-shadow(0 8px 16px rgba(0,0,0,.8));
     }
 
-    /* Vault meter */
-    .vault-meter-block{
-      margin-top:10px;
-    }
-    .vault-meter-block .k{
-      margin-bottom:4px;
-    }
-    .meter{
-      position:relative;
-      width:100%;
-      height:8px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.16);
-      overflow:hidden;
-    }
-    .meter-fill{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#78ffb2,#9ee8ff);
-      box-shadow:0 0 14px rgba(120,255,178,.7);
-      transform-origin:left;
-      animation:meterGlow 2.4s ease-in-out infinite;
-    }
-    @keyframes meterGlow{
-      0%,100%{filter:brightness(1);}
-      50%{filter:brightness(1.4);}
-    }
-
     /* Under images */
     .under-left,
     .under-right{
@@ -494,21 +465,19 @@
       margin:22px 0 8px;
     }
 
-    /* highlight / pulse on tBTC in vault */
-    #vault-balance .k{
-      color:#c4ffe3;
-    }
+    /* highlight / pulse on tBTC in vault (label + value) */
+    #vault-balance .k,
     #vault-balance .v{
-      color:#78ffb2;
+      color:#ffb347;
       font-size:16px;
-      animation:pulse 2.6s ease-in-out infinite;
+      animation:pulse-tbtc 2.6s ease-in-out infinite;
     }
     #vault-balance img{
-      filter:drop-shadow(0 0 12px rgba(120,255,178,.7));
+      filter:drop-shadow(0 0 14px rgba(255,179,71,.85));
     }
-    @keyframes pulse{
-      0%,100%{text-shadow:0 0 0 rgba(120,255,178,.0);}
-      40%{text-shadow:0 0 16px rgba(120,255,178,.7);}
+    @keyframes pulse-tbtc{
+      0%,100%{text-shadow:0 0 0 rgba(255,179,71,.0);}
+      40%{text-shadow:0 0 18px rgba(255,179,71,.85);}
     }
   </style>
 </head>
@@ -627,13 +596,6 @@
           </div>
           <div class="line" id="vault-bumper-info"></div>
           <div class="line" id="vault-balance"></div>
-
-          <div class="vault-meter-block">
-            <div class="k">tBTC share in vault</div>
-            <div class="meter">
-              <div id="vault-tbtc-fill" class="meter-fill"></div>
-            </div>
-          </div>
         </div>
 
         <div class="txs" id="vault-transfers">Loading transactions…</div>
@@ -656,9 +618,6 @@
   </div>
 
   <script>
-    let globalTotalUsd = null;
-    let globalVaultTbtcUsd = null;
-
     function syncToplinksHeight(){
       const chips = document.querySelector('.chips');
       const links = document.querySelector('.header-secondary');
@@ -681,8 +640,6 @@
       const totalUsd  = Number(p.total_usd_value) || 0;
       const bumperVal = Number(p.bumper.total_value_usd) || 0;
 
-      globalTotalUsd = totalUsd;
-
       document.getElementById('vault-total-value').textContent =
         `$${totalUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
@@ -691,8 +648,6 @@
         <span class="k">BUMPER</span>
         <span class="v">${bumperQty.toLocaleString()} tokens</span>
         <span class="muted">($${bumperVal.toFixed(2)})</span>`;
-
-      updateVaultMeter();
     }
 
     function fmtTBTC(n){ return Number(n||0).toFixed(8); }
@@ -713,18 +668,6 @@
       }).join('');
     }
 
-    function updateVaultMeter(){
-      const el = document.getElementById('vault-tbtc-fill');
-      if(!el || globalTotalUsd === null || globalVaultTbtcUsd === null) return;
-
-      let ratio = 0;
-      if(globalTotalUsd > 0){
-        ratio = globalVaultTbtcUsd / globalTotalUsd;
-      }
-      ratio = Math.max(0, Math.min(1, ratio));
-      el.style.width = (ratio * 100).toFixed(1) + '%';
-    }
-
     async function loadStatus(){
       const res = await fetch('data/status.json', { cache:'no-store' });
       if(!res.ok) throw new Error('status.json not found');
@@ -742,9 +685,6 @@
          <span class="k">tBTC</span>
          <span class="v">${b2}</span>
          <span class="muted">($${v2})</span>`;
-
-      globalVaultTbtcUsd = Number(d.vault_wallet_2.tbtc_usd_value) || 0;
-      updateVaultMeter();
 
       renderTx('vault-transfers', d.vault_wallet_2.last_tbtc_transfers);
 
