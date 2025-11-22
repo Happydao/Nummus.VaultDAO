@@ -87,11 +87,18 @@
     }
     .brand-logo img{
       display:block;
-      width:78px;
-      height:78px;
       object-fit:contain;
       filter:drop-shadow(0 12px 28px rgba(0,0,0,.7));
     }
+    .brand-logo img:first-child{
+      width:94px;
+      height:94px;
+    }
+    .brand-logo img:last-child{
+      width:78px;
+      height:78px;
+    }
+
     .brand-text h1{
       margin:0;
       font-family:"Cinzel",serif;
@@ -465,7 +472,7 @@
         </div>
         <div class="brand-text">
           <h1>NUMMUS ↠ tBTC Vault DAO</h1>
-          <div class="subtitle">Live on-chain treasury flow monitor</div>
+          <div class="subtitle">Two-portfolio on-chain treasury monitor</div>
         </div>
       </div>
 
@@ -502,29 +509,29 @@
       </div>
     </header>
 
-    <!-- FLOW STRIP: left → right -->
+    <!-- FLOW STRIP: Portfolio 1 → Portfolio 2 -->
     <section class="flow-strip">
       <div class="flow-label">
         <div class="flow-node">
-          <small>WALLET #1</small>
-          <span>NUMMUS Swap</span>
+          <small>PORTFOLIO 1</small>
+          <span>Nummus → tBTC swaps</span>
         </div>
         <div class="flow-arrow">↠</div>
         <div class="flow-node">
-          <small>WALLET #2</small>
-          <span>Vault DAO (tBTC)</span>
+          <small>PORTFOLIO 2</small>
+          <span>Vault DAO holdings</span>
         </div>
       </div>
       <div class="flow-note">
-        tBTC received by the Vault wallet is governed on Realms.<br>
-        <b>1 NUMMUS = 1 vote</b> over the treasury.
+        All holdings in Portfolio 2 (tBTC, BUMPER and future assets)<br>
+        are governed on Realms — <b>1 NUMMUS = 1 vote</b> over the treasury.
       </div>
     </section>
 
     <!-- MAIN CARDS -->
     <section class="grid">
       <article class="card" id="swap-card">
-        <div class="card-tag">Wallet #1 · Inbound tBTC</div>
+        <div class="card-tag">Portfolio 1 · Nummus → tBTC swap activity</div>
         <h3>tBTC Swap Wallet</h3>
         <a class="wallet-link" href="https://solscan.io/account/AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B" target="_blank" rel="noopener">
           Open on Solscan
@@ -533,7 +540,7 @@
 
         <div class="balances">
           <div class="kv">
-            <div class="k">Current tBTC balance</div>
+            <div class="k">Current tBTC balance (swap wallet)</div>
             <div class="v" id="swap-balance">—</div>
           </div>
         </div>
@@ -551,7 +558,7 @@
           </a>
         </div>
 
-        <div class="card-tag">Wallet #2 · Vault DAO</div>
+        <div class="card-tag">Portfolio 2 · DAO-governed vault (tBTC + BUMPER)</div>
         <h3>Nummus Aeternitas Vault DAO</h3>
 
         <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
@@ -592,7 +599,7 @@
       const chips = document.querySelector('.chips');
       const links = document.querySelector('.header-secondary');
       if(!chips || !links) return;
-      // niente altezza forzata qui, layout più fluido
+      // layout fluido, non forziamo altezza
     }
     window.addEventListener('load', syncToplinksHeight);
     window.addEventListener('resize', syncToplinksHeight);
