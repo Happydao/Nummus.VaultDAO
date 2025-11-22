@@ -448,13 +448,21 @@
       margin:22px 0 8px;
     }
 
-    /* small pulse on total value */
-    #vault-total-value{
+    /* highlight / pulse on tBTC in vault */
+    #vault-balance .k{
+      color:#c4ffe3;
+    }
+    #vault-balance .v{
+      color:#78ffb2;
+      font-size:16px;
       animation:pulse 2.6s ease-in-out infinite;
+    }
+    #vault-balance img{
+      filter:drop-shadow(0 0 12px rgba(120,255,178,.7));
     }
     @keyframes pulse{
       0%,100%{text-shadow:0 0 0 rgba(120,255,178,.0);}
-      40%{text-shadow:0 0 16px rgba(120,255,178,.6);}
+      40%{text-shadow:0 0 16px rgba(120,255,178,.7);}
     }
   </style>
 </head>
@@ -523,7 +531,7 @@
         </div>
       </div>
       <div class="flow-note">
-        All holdings in Portfolio 2 (tBTC, BUMPER and future assets)<br>
+        All holdings in Portfolio 2 (tBTC and another asset)<br>
         are governed on Realms — <b>1 NUMMUS = 1 vote</b> over the treasury.
       </div>
     </section>
@@ -558,7 +566,7 @@
           </a>
         </div>
 
-        <div class="card-tag">Portfolio 2 · DAO-governed vault (tBTC + BUMPER)</div>
+        <div class="card-tag">Portfolio 2 · DAO-governed vault</div>
         <h3>Nummus Aeternitas Vault DAO</h3>
 
         <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
