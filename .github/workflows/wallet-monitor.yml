@@ -33,6 +33,8 @@ jobs:
 
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
           MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          MINT_PUNCHY="GnYufMbTAMz1DzkSN2DmwkBzjMTLkM22WvQuN1VCbonk"
+
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
           # Profondità per wallet (solo WALLET2 molto profonda)
@@ -127,6 +129,7 @@ jobs:
           TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
           TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
           BUMPER_BAL_W2=$(get_balance "$WALLET2" "$MINT_BUMPER")
+          PUNCHY_BAL_W2=$(get_balance "$WALLET2" "$MINT_PUNCHY")
 
           # ------------ TRANSAZIONI ------------
           XFERS_W1=$(fetch_transactions "$WALLET1" "$HELIUS_PAGES_W1" "$HELIUS_LIMIT" "$HELIUS_DELAY_SEC")
@@ -172,7 +175,26 @@ jobs:
           fi
 
           if [[ -z "${PRICE_BUMPER:-}" ]]; then
-            echo "❌ Nessun prezzo disponibile (Jupiter DNS KO e DexScreener vuoto) — esco."
+            echo "❌ Nessun prezzo disponibile per BUMPER (Jupiter DNS KO e DexScreener vuoto) — esco."
+            exit 1
+          fi
+
+          # ====== Prezzo PUNCHY: Jupiter USDC -> fallback DexScreener ======
+          PRICE_PUNCHY=""
+          # 1) Jupiter
+          if JUP_JSON_PUNCHY=$(curl -sS --retry 1 --max-time 10 "https://price.jup.ag/v4/price?ids=$MINT_PUNCHY&vsToken=USDC" 2>/dev/null); then
+            PRICE_PUNCHY=$(echo "$JUP_JSON_PUNCHY" | jq -r --arg ID "$MINT_PUNCHY" '.data[$ID].price // (.data[]?.price) // empty')
+          fi
+
+          # 2) Fallback DexScreener
+          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
+            if DS_JSON_PUNCHY=$(curl -sS --retry 2 --max-time 20 "https://api.dexscreener.com/latest/dex/tokens/$MINT_PUNCHY" 2>/dev/null); then
+              PRICE_PUNCHY=$(echo "$DS_JSON_PUNCHY" | jq -r '.pairs[0].priceUsd // empty')
+            fi
+          fi
+
+          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
+            echo "❌ Nessun prezzo disponibile per PUNCHY (Jupiter e DexScreener vuoti) — esco."
             exit 1
           fi
 
@@ -180,7 +202,9 @@ jobs:
           VALUE_W1=$(echo "scale=2; $TBTC_BAL_W1 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
           VALUE_W2=$(echo "scale=2; $TBTC_BAL_W2 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
           VALUE_BUMPER=$(echo "scale=2; $BUMPER_BAL_W2 * $PRICE_BUMPER" | bc -l | xargs printf "%.2f")
-          TOTAL_USD_VAULT=$(echo "scale=2; $VALUE_W2 + $VALUE_BUMPER" | bc -l | xargs printf "%.2f")
+          VALUE_PUNCHY=$(echo "scale=2; $PUNCHY_BAL_W2 * $PRICE_PUNCHY" | bc -l | xargs printf "%.2f")
+
+          TOTAL_USD_VAULT=$(echo "scale=2; $VALUE_W2 + $VALUE_BUMPER + $VALUE_PUNCHY" | bc -l | xargs printf "%.2f")
 
           # ------------ OUTPUT JSON (compatibile con index) ------------
           jq -n \
@@ -211,6 +235,9 @@ jobs:
             --arg bumper_price "$PRICE_BUMPER" \
             --arg bumper_qty "$BUMPER_BAL_W2" \
             --arg bumper_val "$VALUE_BUMPER" \
+            --arg punchy_price "$PRICE_PUNCHY" \
+            --arg punchy_qty "$PUNCHY_BAL_W2" \
+            --arg punchy_val "$VALUE_PUNCHY" \
             --arg w1_bal "$TBTC_BAL_W1" \
             --arg w1_val "$VALUE_W1" \
             --arg w2_bal "$TBTC_BAL_W2" \
@@ -225,6 +252,12 @@ jobs:
                 price_usd: ($bumper_price | tonumber),
                 quantity: ($bumper_qty | tonumber),
                 total_value_usd: ($bumper_val | tonumber)
+              },
+              punchy: {
+                mint: "'"$MINT_PUNCHY"'",
+                price_usd: ($punchy_price | tonumber),
+                quantity: ($punchy_qty | tonumber),
+                total_value_usd: ($punchy_val | tonumber)
               },
               wallet_1: {
                 tbtc_balance: ($w1_bal | tonumber),
