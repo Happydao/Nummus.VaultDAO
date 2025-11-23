@@ -516,6 +516,11 @@
             <span class="label">BUMPER</span>
             <span class="val" id="bumper-price">$—</span>
           </div>
+          <div class="chip">
+            <span class="dot" style="background:var(--chipC)"></span>
+            <span class="label">PUNCHY</span>
+            <span class="val" id="punchy-price">$—</span>
+          </div>
         </div>
 
         <div class="toplinks">
@@ -594,8 +599,9 @@
             <div class="k">Total vault value (USD)</div>
             <div class="v" id="vault-total-value">—</div>
           </div>
-          <div class="line" id="vault-bumper-info"></div>
           <div class="line" id="vault-balance"></div>
+          <div class="line" id="vault-bumper-info"></div>
+          <div class="line" id="vault-punchy-info"></div>
         </div>
 
         <div class="txs" id="vault-transfers">Loading transactions…</div>
@@ -634,20 +640,43 @@
 
       document.getElementById('tbtc-price').textContent   = `$${p.tbtc_price_usd}`;
       document.getElementById('nummus-price').textContent = `$${p.nummus_price_usd}`;
-      document.getElementById('bumper-price').textContent = `$${p.bumper.price_usd}`;
+      document.getElementById('bumper-price').textContent = p.bumper ? `$${p.bumper.price_usd}` : '$—';
+      document.getElementById('punchy-price').textContent = p.punchy ? `$${p.punchy.price_usd}` : '$—';
 
-      const bumperQty = Number(p.bumper.quantity) || 0;
+      const bumperQty = Number(p.bumper?.quantity ?? 0);
+      const bumperVal = Number(p.bumper?.total_value_usd ?? 0);
+
+      const punchyQty = Number(p.punchy?.quantity ?? 0);
+      const punchyVal = Number(p.punchy?.total_value_usd ?? 0);
+
       const totalUsd  = Number(p.total_usd_value) || 0;
-      const bumperVal = Number(p.bumper.total_value_usd) || 0;
 
       document.getElementById('vault-total-value').textContent =
         `$${totalUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
-      document.getElementById('vault-bumper-info').innerHTML = `
-        <img src="images/bumper.png" alt="BUMPER">
-        <span class="k">BUMPER</span>
-        <span class="v">${bumperQty.toLocaleString()} tokens</span>
-        <span class="muted">($${bumperVal.toFixed(2)})</span>`;
+      // BUMPER info
+      const bumperEl = document.getElementById('vault-bumper-info');
+      if (p.bumper) {
+        bumperEl.innerHTML = `
+          <img src="images/bumper.png" alt="BUMPER">
+          <span class="k">BUMPER</span>
+          <span class="v">${bumperQty.toLocaleString()} tokens</span>
+          <span class="muted">($${bumperVal.toFixed(2)})</span>`;
+      } else {
+        bumperEl.innerHTML = '';
+      }
+
+      // PUNCHY info
+      const punchyEl = document.getElementById('vault-punchy-info');
+      if (p.punchy) {
+        punchyEl.innerHTML = `
+          <img src="images/punchy.jpg" alt="PUNCHY">
+          <span class="k">PUNCHY</span>
+          <span class="v">${punchyQty.toLocaleString()} tokens</span>
+          <span class="muted">($${punchyVal.toFixed(2)})</span>`;
+      } else {
+        punchyEl.innerHTML = '';
+      }
     }
 
     function fmtTBTC(n){ return Number(n||0).toFixed(8); }
