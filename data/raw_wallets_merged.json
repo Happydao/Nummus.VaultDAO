@@ -147871,6 +147871,91 @@
     }
   },
   {
+    "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 300000 BUMPER to BWpfdih6BGgsfgHHt7FcbmHW9GhJ9XJNfjZTiwEEoZ8L.",
+    "type": "TRANSFER",
+    "source": "SOLANA_PROGRAM_LIBRARY",
+    "fee": 5000,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "3nnqKDMLFPHgT6VyCz3TrKiXUvaA4EHWh83A9GDNSwLKR5ZL1kUBixNBpF9wxmcPC3AWJwvGrvvvQ8uUsk5mGcfi",
+    "slot": 390224456,
+    "timestamp": 1767121001,
+    "tokenTransfers": [
+      {
+        "fromTokenAccount": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+        "toTokenAccount": "76xtht97fVYmc93ZcTEoK7EBHk5Yu6doUwRAvo6L2wnx",
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "BWpfdih6BGgsfgHHt7FcbmHW9GhJ9XJNfjZTiwEEoZ8L",
+        "tokenAmount": 300000,
+        "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+        "tokenStandard": "Fungible"
+      }
+    ],
+    "nativeTransfers": [],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -5000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "76xtht97fVYmc93ZcTEoK7EBHk5Yu6doUwRAvo6L2wnx",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "BWpfdih6BGgsfgHHt7FcbmHW9GhJ9XJNfjZTiwEEoZ8L",
+            "tokenAccount": "76xtht97fVYmc93ZcTEoK7EBHk5Yu6doUwRAvo6L2wnx",
+            "rawTokenAmount": {
+              "tokenAmount": "300000000000",
+              "decimals": 6
+            },
+            "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          }
+        ]
+      },
+      {
+        "account": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+            "tokenAccount": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+            "rawTokenAmount": {
+              "tokenAmount": "-300000000000",
+              "decimals": 6
+            },
+            "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          }
+        ]
+      },
+      {
+        "account": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+          "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+          "76xtht97fVYmc93ZcTEoK7EBHk5Yu6doUwRAvo6L2wnx",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "g7UoNs4evVAvq",
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 0.1 SOL to HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s.",
     "type": "TRANSFER",
     "source": "SYSTEM_PROGRAM",
@@ -346537,6 +346622,91 @@
         ],
         "data": "3Bxs41MmGWz3iDe7",
         "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
+    "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 24000 BUMPER to CkME7SGE8erHi1XnhyKkSgmnTMWjSiTAh6DxEMn57iNJ.",
+    "type": "TRANSFER",
+    "source": "SOLANA_PROGRAM_LIBRARY",
+    "fee": 5000,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "DxXaDLdASD1rKiJVDcZ5F8nx5oNHMKCJjPSc6GBFG9rF53aoEF8JF1P8gXyUqTrPocWeD5w5CKkEpQ9e3kGtKpR",
+    "slot": 390224376,
+    "timestamp": 1767120970,
+    "tokenTransfers": [
+      {
+        "fromTokenAccount": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+        "toTokenAccount": "7A4wDCzTyZFYe6dGD41rAuh8MJXkuE5BpNYPvzbFZaYT",
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "CkME7SGE8erHi1XnhyKkSgmnTMWjSiTAh6DxEMn57iNJ",
+        "tokenAmount": 24000,
+        "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+        "tokenStandard": "Fungible"
+      }
+    ],
+    "nativeTransfers": [],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -5000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "7A4wDCzTyZFYe6dGD41rAuh8MJXkuE5BpNYPvzbFZaYT",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "CkME7SGE8erHi1XnhyKkSgmnTMWjSiTAh6DxEMn57iNJ",
+            "tokenAccount": "7A4wDCzTyZFYe6dGD41rAuh8MJXkuE5BpNYPvzbFZaYT",
+            "rawTokenAmount": {
+              "tokenAmount": "24000000000",
+              "decimals": 6
+            },
+            "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          }
+        ]
+      },
+      {
+        "account": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+            "tokenAccount": "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+            "rawTokenAmount": {
+              "tokenAmount": "-24000000000",
+              "decimals": 6
+            },
+            "mint": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          }
+        ]
+      },
+      {
+        "account": "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "ART5dM6xqTFybZZ28DyCdChvyNFUfrhkDcn4BUQv8xL2",
+          "5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk",
+          "7A4wDCzTyZFYe6dGD41rAuh8MJXkuE5BpNYPvzbFZaYT",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "g7eBmtmdjge1T",
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         "innerInstructions": []
       }
     ],
