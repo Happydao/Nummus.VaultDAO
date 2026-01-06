@@ -200,6 +200,17 @@
       font-size:12px;
       transition:.2s ease-out;
     }
+    .pill--text{
+      width:auto;
+      height:26px;
+      padding:0 10px;
+      border-radius:10px;
+      font-family:"Cinzel",serif;
+      font-weight:700;
+      letter-spacing:.06em;
+      font-size:11px;
+      text-transform:none;
+    }
     .pill img,.pill svg{
       width:16px;height:16px;display:block;
     }
@@ -438,6 +449,53 @@
     }
     .under-left{grid-column:1;}
     .under-right{grid-column:2;}
+    .update-row{
+      grid-column:1 / -1;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      margin:6px 0 2px;
+    }
+    .info-block{
+      max-width:520px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:rgba(6,10,19,.55);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 12px 30px rgba(0,0,0,.45);
+      color:var(--text);
+      font-family:"Cinzel", "Times New Roman", serif;
+      font-size:13px;
+      line-height:1.6;
+    }
+    .info-block p{
+      margin:0 0 10px;
+    }
+    .info-block p:last-child{
+      margin-bottom:0;
+    }
+    .hub-link{
+      color:#4aa3ff;
+      text-decoration:underline;
+      font-weight:700;
+      display:inline-block;
+      transition:transform .2s ease, text-shadow .2s ease;
+      animation:hub-float 3s ease-in-out infinite;
+    }
+    .hub-link:hover{
+      transform:translateX(4px);
+      text-shadow:0 0 10px rgba(74,163,255,.8);
+      animation:hub-nudge .45s ease;
+    }
+    @keyframes hub-float{
+      0%,100%{transform:translateY(0);}
+      50%{transform:translateY(-1px);}
+    }
+    @keyframes hub-nudge{
+      0%{transform:translateX(0);}
+      45%{transform:translateX(6px);}
+      100%{transform:translateX(4px);}
+    }
     .under-left img{
       width:58%;
       height:auto;
@@ -456,6 +514,37 @@
       .under-left,.under-right{
         grid-column:1;
       }
+      .update-row{
+        grid-row:3;
+      }
+      .under-right{
+        grid-row:4;
+      }
+      .under-left{
+        grid-row:5;
+      }
+      .under-right img{
+        width:114%;
+      }
+      .realms{
+        position:static;
+        margin:10px 0 0;
+        text-align:left;
+        display:flex;
+        align-items:center;
+        gap:8px;
+      }
+      .realms a{
+        font-size:9px;
+      }
+      .realms img{
+        width:26px;
+        height:26px;
+        margin-top:0;
+      }
+      .realms a:last-child{
+        order:-1;
+      }
     }
 
     footer{
@@ -463,6 +552,11 @@
       color:var(--muted);
       font-size:12px;
       margin:22px 0 8px;
+    }
+    .footer-link{
+      color:#4aa3ff;
+      text-decoration:underline;
+      font-weight:700;
     }
 
     /* highlight / pulse on tBTC in vault (label + value) */
@@ -524,14 +618,8 @@
         </div>
 
         <div class="toplinks">
-          <a class="pill" href="https://github.com/Happydao/Nummus.VaultDAO" target="_blank" rel="noopener" aria-label="View on GitHub">
-            <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="">
-          </a>
-          <a class="pill" href="https://x.com/NummusMemeCoin" target="_blank" rel="noopener" aria-label="Nummus on X">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2H21l-6.52 7.45L22 22h-6.93l-4.56-5.96L4.3 22H1.54l6.98-7.97L2 2h7l4.11 5.5L18.244 2Zm-2.42 18h2.08L8.26 4H6.18l9.644 16Z"/></svg>
-          </a>
-          <a class="pill" href="https://nummus.meme" target="_blank" rel="noopener" aria-label="nummus.meme website">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.08a14.7 14.7 0 0 0-1.1-5.01A8.02 8.02 0 0 1 19.93 11ZM12 4c.88 0 2.44 2.2 2.9 6H9.1C9.56 6.2 11.12 4 12 4ZM6.25 5.99A14.7 14.7 0 0 0 5.15 11H2.07a8.02 8.02 0 0 1 4.18-5.01ZM4.07 13h3.08c.2 1.86.74 3.64 1.6 5.01A8.02 8.02 0 0 1 4.07 13ZM12 20c-.88 0-2.44-2.2-2.9-6h5.8c-.46 3.8-2.02 6-2.9 6Zm3.25-1.99c.86-1.37 1.4-3.15 1.6-5.01h3.08a8.02 8.02 0 0 1-4.68 5.01Z"/></svg>
+          <a class="pill pill--text" href="https://nummus.meme" target="_blank" rel="noopener" aria-label="nummus.meme website">
+            Nummus.meme
           </a>
         </div>
       </div>
@@ -577,6 +665,8 @@
       </article>
 
       <article class="card" id="vault-card">
+        <div class="card-tag">Portfolio 2 · DAO-governed vault</div>
+        <h3>Nummus Aeternitas Vault DAO</h3>
         <div class="realms">
           <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">
             NUMMUS holder voting
@@ -585,9 +675,6 @@
             <img src="images/logo-realms.png" alt="Realms" />
           </a>
         </div>
-
-        <div class="card-tag">Portfolio 2 · DAO-governed vault</div>
-        <h3>Nummus Aeternitas Vault DAO</h3>
 
         <a class="wallet-link" href="https://solscan.io/account/HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s" target="_blank" rel="noopener">
           Open on Solscan
@@ -607,10 +694,18 @@
         <div class="txs" id="vault-transfers">Loading transactions…</div>
       </article>
 
+      <div class="update-row">
+        <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
+      </div>
+
       <!-- sotto la card sinistra -->
-      <figure class="under-left" aria-label="Legionario">
-        <img src="images/legionario.png" alt="Legionario">
-      </figure>
+      <div class="under-left" aria-label="Nummus Hub overview">
+        <div class="info-block">
+          <p>Explore the full $NUMMUS mechanism in a simplified way. Through the interactive <a class="hub-link" href="https://happydao.github.io/Nummus.Hub/" target="_blank" rel="noopener">NUMMUS HUB</a>, you can visually follow the entire process: automated swaps from NUMMUS to tBTC, the flow of assets into the community Vault, and all on-chain data related to each operation.</p>
+          <p>The Hub provides an interactive overview of swap vaults, transaction paths, balances, and on-chain confirmations, while also illustrating the NUMMUS burn mechanism driven by Torrino DAO's trading activity.</p>
+          <p>All core dynamics of NUMMUS are explained within a single, unified interactive interface.</p>
+        </div>
+      </div>
 
       <!-- sotto la card destra -->
       <figure class="under-right" aria-label="Resume image">
@@ -619,7 +714,7 @@
     </section>
 
     <footer>
-      <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
+      © 2026 Torrino DAO — Crafted with passion by HAPPY — <a class="footer-link" href="https://happydev.fi" target="_blank" rel="noopener">happydev.fi</a>
     </footer>
   </div>
 
