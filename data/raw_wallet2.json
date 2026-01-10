@@ -10083,6 +10083,73 @@
     "events": {}
   },
   {
+    "description": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ transferred a total 0.00095 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+    "signature": "3LFE9MkkbQK1yGvYPkGmNUXqKP4aZgCw2wqeAKLfgdcZZMn4ojVzWs5p1cQNgcHvcT5wf49P4zoK5PNNR2Gk3nca",
+    "slot": 392592408,
+    "timestamp": 1768058318,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "toUserAccount": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "amount": 10000
+      },
+      {
+        "fromUserAccount": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "toUserAccount": "5kAiVf1fRzv7z5c2eH9xnUNvg7NVwfPZLT9vYFmi9pBk",
+        "amount": 935000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "nativeBalanceChange": -950000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "5kAiVf1fRzv7z5c2eH9xnUNvg7NVwfPZLT9vYFmi9pBk",
+        "nativeBalanceChange": 935000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "nativeBalanceChange": 10000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+          "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+        ],
+        "data": "3Bxs43ZMjSRQLs6o",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+          "5kAiVf1fRzv7z5c2eH9xnUNvg7NVwfPZLT9vYFmi9pBk"
+        ],
+        "data": "3Bxs4Fcx2M8hu7Cj",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "BbaUdXW4ogPQq2UWK1T6p9aWEAdJK7eRpyhvLwcJYTYT transferred a total 0.00000504 SOL to multiple accounts.",
     "type": "TRANSFER",
     "source": "SYSTEM_PROGRAM",
