@@ -300843,6 +300843,91 @@
     "events": {}
   },
   {
+    "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 0.25 SOL to Bip6biYHeN5mF8DEZ1mPjcyhhrMAxhbyZtXBF6foXUT6.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 409813,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "5doJSiAwnhXNU7KopDXfm4TopR1AhjMXNr7VFUpQqgdjrbgeSqVS62RdNzM6yqUb3PPMTHF4PXVp94vTvzTwbixP",
+    "slot": 393853109,
+    "timestamp": 1768555506,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "Bip6biYHeN5mF8DEZ1mPjcyhhrMAxhbyZtXBF6foXUT6",
+        "amount": 250000000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -250409813,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "Bip6biYHeN5mF8DEZ1mPjcyhhrMAxhbyZtXBF6foXUT6",
+        "nativeBalanceChange": 250000000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "ComputeBudget111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [],
+        "data": "3pxH24Jz9mPd",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "Bip6biYHeN5mF8DEZ1mPjcyhhrMAxhbyZtXBF6foXUT6"
+        ],
+        "data": "3Bxs4NPCZMKNg6oy",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "4nUaXVqPJSjvFpb8DmU8u3rqpVcmuWX4Ny1F8PCh9K5g",
+        "programId": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "BgfmnTW8GBXTX4Fh8V6heW3UG2cPV4vXCCP",
+        "programId": "L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 500000 PUNCHY to 2VsvCYt1VCjXk6Z7Vr7kgVSriknw9viiMKWQWZHDgSao.",
     "type": "TRANSFER",
     "source": "SOLANA_PROGRAM_LIBRARY",
