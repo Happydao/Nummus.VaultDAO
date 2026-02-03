@@ -123353,6 +123353,73 @@
     }
   },
   {
+    "description": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s transferred a total 0.00095 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+    "signature": "3h93Nt3YjecjboQMTumnTyFMNmXorWUwBe5yW4V7T219wsaD9dhUdL5cKdcCKoQuuPL7r8ETahHuwMwNAG7CpCws",
+    "slot": 380661810,
+    "timestamp": 1763377475,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "toUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "amount": 10000
+      },
+      {
+        "fromUserAccount": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "toUserAccount": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "amount": 935000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+        "nativeBalanceChange": -950000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": 10000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran",
+        "nativeBalanceChange": 935000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "3Bxs43ZMjSRQLs6o",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "HtTs5yJwjDP8wr3hFHcsrFi9ZfedQzjguEWApYboot3s",
+          "G2fbcmjMAuwaAaJjJdohc7hk7Df2raM6tpKAvwUVVran"
+        ],
+        "data": "3Bxs4Fcx2M8hu7Cj",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "JD25qVdtd65FoiXNmR89JjmoJdYk9sjYQeSTZAALFiMy swapped 6451.612903 NUMMUS for 0.00095002 tBTC",
     "type": "SWAP",
     "source": "JUPITER",
