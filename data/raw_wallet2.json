@@ -43697,6 +43697,73 @@
     "events": {}
   },
   {
+    "description": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ transferred a total 0.000905881 SOL to multiple accounts.",
+    "type": "TRANSFER",
+    "source": "SYSTEM_PROGRAM",
+    "fee": 5000,
+    "feePayer": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+    "signature": "apURFqdxrk1YBrut1p7kj8U6mh7ZZzi6vxS2GaB6jZRzL5QgszLRrn3gQBzVEuE72kXWvec4rdz9MBtoe85cLXt",
+    "slot": 398883647,
+    "timestamp": 1770553960,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "toUserAccount": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "amount": 10000
+      },
+      {
+        "fromUserAccount": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "toUserAccount": "HCiH5pMKxBEjcrZe1zQKWc7dbGhfFLWqpVm8ZZD8XCsy",
+        "amount": 890881
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+        "nativeBalanceChange": -905881,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HCiH5pMKxBEjcrZe1zQKWc7dbGhfFLWqpVm8ZZD8XCsy",
+        "nativeBalanceChange": 890881,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s",
+        "nativeBalanceChange": 10000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [
+          "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+          "HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+        ],
+        "data": "3Bxs43ZMjSRQLs6o",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJyV7TyqzuGYt4CrBqQV51NdYCF3iWMfqeDqvEZyMZ",
+          "HCiH5pMKxBEjcrZe1zQKWc7dbGhfFLWqpVm8ZZD8XCsy"
+        ],
+        "data": "3Bxs4188818bJhHR",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      }
+    ],
+    "events": {}
+  },
+  {
     "description": "Hc2vsrdknaVuSypGNyMDuzR3FN3yWVcSuFALT6j2Cq71 minted 2 compressed nfts.",
     "type": "COMPRESSED_NFT_MINT",
     "source": "BUBBLEGUM",
