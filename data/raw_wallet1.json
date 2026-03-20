@@ -142802,6 +142802,109 @@
     }
   },
   {
+    "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 350 USDC to 3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh.",
+    "type": "TRANSFER",
+    "source": "SOLANA_PROGRAM_LIBRARY",
+    "fee": 79994,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "3zk15Wy7jDhrxnjam9XeMohooDwBoXs9uHgqCacMVTSSQgS25J9M3xe7Ex3djGwY4ZRQunkiCKGKyZrcE7iR61KL",
+    "slot": 407731338,
+    "timestamp": 1774034723,
+    "tokenTransfers": [
+      {
+        "fromTokenAccount": "Tz86J9fq7JqwVaSEHNPb613fg7wNA2nEDVBEma93N8b",
+        "toTokenAccount": "ApRiGPXeCntdXc1CHKH5FnqiXXttZo7asq6NGG85wNaj",
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh",
+        "tokenAmount": 350,
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "tokenStandard": "Fungible"
+      }
+    ],
+    "nativeTransfers": [],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -79994,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "ApRiGPXeCntdXc1CHKH5FnqiXXttZo7asq6NGG85wNaj",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh",
+            "tokenAccount": "ApRiGPXeCntdXc1CHKH5FnqiXXttZo7asq6NGG85wNaj",
+            "rawTokenAmount": {
+              "tokenAmount": "350000000",
+              "decimals": 6
+            },
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          }
+        ]
+      },
+      {
+        "account": "Tz86J9fq7JqwVaSEHNPb613fg7wNA2nEDVBEma93N8b",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": [
+          {
+            "userAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+            "tokenAccount": "Tz86J9fq7JqwVaSEHNPb613fg7wNA2nEDVBEma93N8b",
+            "rawTokenAmount": {
+              "tokenAmount": "-350000000",
+              "decimals": 6
+            },
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          }
+        ]
+      },
+      {
+        "account": "ComputeBudget111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [],
+        "data": "3dmkZdMRLKLs",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [],
+        "data": "GhToxb",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "Tz86J9fq7JqwVaSEHNPb613fg7wNA2nEDVBEma93N8b",
+          "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "ApRiGPXeCntdXc1CHKH5FnqiXXttZo7asq6NGG85wNaj",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B"
+        ],
+        "data": "hjsZbZ2fW1RHw",
+        "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "innerInstructions": []
+      }
+    ],
+    "lighthouseData": null,
+    "events": {}
+  },
+  {
     "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B transferred 5 SOL to 8drWwMfNd2Mn4xcvHwxNsmZSzYyRzjj7hkKAsano7g8U.",
     "type": "TRANSFER",
     "source": "SYSTEM_PROGRAM",
