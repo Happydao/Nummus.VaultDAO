@@ -7,9 +7,9 @@ set -euo pipefail
 : "${HELIUS_API_KEY:?HELIUS_API_KEY non impostata}"
 API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
-# Wallet & mint (BUMPER su Solana)
+# Wallet & mint (PISTA su Solana)
 WALLET="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
-MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+MINT_BUMPER="9CaQUthsVMugZzMvskrrvcHXyjFqHGdNtGkPT8QSRACE"
 MINT_PUNCHY="GnYufMbTAMz1DzkSN2DmwkBzjMTLkM22WvQuN1VCbonk"
 
 DATA_DIR="data"
@@ -45,7 +45,7 @@ fix_decimal() {
 }
 
 # ========================
-# Fetch assets una sola volta (BUMPER + PUNCHY)
+# Fetch assets una sola volta (PISTA + PUNCHY)
 # ========================
 ASSETS_JSON=$(
   curl -sS -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
@@ -109,7 +109,7 @@ get_price_for_mint() {
 }
 
 # ========================
-# 1) BUMPER (stesso flusso di prima, stessi campi nel JSON)
+# 1) PISTA (stesso flusso di prima, stessi campi nel JSON)
 # ========================
 QUANTITY_BUMPER=$(get_quantity_for_mint "$MINT_BUMPER")
 PRICE_BUMPER_USD=$(get_price_for_mint "$MINT_BUMPER")
@@ -128,11 +128,11 @@ TOTAL_VALUE_PUNCHY_USD=$(fix_decimal "$TOTAL_VALUE_PUNCHY_USD" "$VALUE_SCALE")
 
 # ========================
 # 3) Output JSON
-#    ⚠ I campi di BUMPER restano identici a prima.
+#    ⚠ I campi legacy "bumper" restano identici a prima.
 #    PUNCHY è aggiunto sotto la chiave "punchy".
 # ========================
 jq -n \
-  --arg token "BUMPER" \
+  --arg token "PISTA" \
   --arg mint "$MINT_BUMPER" \
   --arg price "$PRICE_BUMPER_USD" \
   --arg qty "$QUANTITY_BUMPER" \
@@ -160,5 +160,5 @@ jq -n \
 }' > "$OUT_FILE"
 
 echo "✅ Salvato $OUT_FILE"
-echo "   BUMPER: price_usd=$PRICE_BUMPER_USD | qty=$QUANTITY_BUMPER | total_usd=$TOTAL_VALUE_BUMPER_USD"
+echo "   PISTA: price_usd=$PRICE_BUMPER_USD | qty=$QUANTITY_BUMPER | total_usd=$TOTAL_VALUE_BUMPER_USD"
 echo "   PUNCHY: price_usd=$PRICE_PUNCHY_USD | qty=$QUANTITY_PUNCHY | total_usd=$TOTAL_VALUE_PUNCHY_USD"

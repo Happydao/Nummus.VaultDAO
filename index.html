@@ -607,7 +607,7 @@
           </div>
           <div class="chip">
             <span class="dot" style="background:var(--chipC)"></span>
-            <span class="label">BUMPER</span>
+            <span class="label">PISTA</span>
             <span class="val" id="bumper-price">$—</span>
           </div>
           <div class="chip">
@@ -749,12 +749,12 @@
       document.getElementById('vault-total-value').textContent =
         `$${totalUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
-      // BUMPER info
+      // PISTA info
       const bumperEl = document.getElementById('vault-bumper-info');
       if (p.bumper) {
         bumperEl.innerHTML = `
-          <img src="images/bumper.png" alt="BUMPER">
-          <span class="k">BUMPER</span>
+          <img src="images/pista.png" alt="PISTA">
+          <span class="k">PISTA</span>
           <span class="v">${bumperQty.toLocaleString()} tokens</span>
           <span class="muted">($${bumperVal.toFixed(2)})</span>`;
       } else {
