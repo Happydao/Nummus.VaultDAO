@@ -65,6 +65,7 @@ TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 # ========================
 get_quantity_for_mint() {
   local MINT="$1"
+  local RAW_BAL DECIMALS TOKEN_ACCOUNTS_JSON RAW_SUM
 
   read -r RAW_BAL DECIMALS <<<"$(
     echo "$ASSETS_JSON" | jq -r --arg M "$MINT" '
@@ -81,7 +82,34 @@ get_quantity_for_mint() {
   if [[ "$RAW_BAL" != 0 && "$DECIMALS" =~ ^[0-9]+$ ]]; then
     QTY=$(echo "scale=$QTY_SCALE; $RAW_BAL / (10 ^ $DECIMALS)" | bc -l)
   else
-    QTY=$(printf "%.*f" "$QTY_SCALE" 0)
+    TOKEN_ACCOUNTS_JSON=$(
+      curl -sS -X POST "$API_RPC" -H "Content-Type: application/json" -d '{
+        "jsonrpc":"2.0","id":"1","method":"getTokenAccountsByOwner",
+        "params":[
+          "'"$WALLET"'",
+          {"mint":"'"$MINT"'"},
+          {"encoding":"jsonParsed"}
+        ]
+      }'
+    )
+
+    read -r RAW_SUM DECIMALS <<<"$(
+      echo "$TOKEN_ACCOUNTS_JSON" | jq -r '
+        [
+          .result.value[]?.account.data.parsed.info.tokenAmount.amount // "0"
+        ] as $amounts
+        |
+        (($amounts | map(tonumber) | add) // 0 | tostring) + " " +
+        ((.result.value[0]?.account.data.parsed.info.tokenAmount.decimals // 0) | tostring)
+      '
+    )"
+
+    RAW_SUM=$(num_or_zero "$RAW_SUM")
+    if [[ "$RAW_SUM" != 0 && "$DECIMALS" =~ ^[0-9]+$ ]]; then
+      QTY=$(echo "scale=$QTY_SCALE; $RAW_SUM / (10 ^ $DECIMALS)" | bc -l)
+    else
+      QTY=$(printf "%.*f" "$QTY_SCALE" 0)
+    fi
   fi
   fix_decimal "$QTY" "$QTY_SCALE"
 }
@@ -92,7 +120,7 @@ get_quantity_for_mint() {
 get_price_for_mint() {
   local MINT="$1"
 
-  local JUP_PRICE_JSON RAW_PRICE PRICE_USD_NUM
+  local JUP_PRICE_JSON DS_JSON RAW_PRICE PRICE_USD_NUM
   JUP_PRICE_JSON=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 \
     "https://price.jup.ag/v4/price?ids=$MINT&vsToken=USDC" || echo "")
 
@@ -100,7 +128,20 @@ get_price_for_mint() {
     | jq -r --arg ID "$MINT" '.data[$ID].price // (.data[]?.price) // empty')
 
   if [[ -z "$RAW_PRICE" ]]; then
-    echo "❌ Nessun prezzo per $MINT da price.jup.ag; interruzione per non scrivere 0."
+    DS_JSON=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 \
+      "https://api.dexscreener.com/latest/dex/tokens/$MINT" || echo "")
+
+    RAW_PRICE=$(echo "$DS_JSON" | jq -r '
+      (.pairs // [])
+      | map(select(.chainId == "solana"))
+      | sort_by((.liquidity.usd // 0) | tonumber)
+      | last
+      | .priceUsd // empty
+    ')
+  fi
+
+  if [[ -z "$RAW_PRICE" ]]; then
+    echo "❌ Nessun prezzo per $MINT da Jupiter o DexScreener; interruzione per non scrivere 0."
     exit 1
   fi
 

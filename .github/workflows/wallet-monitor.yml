@@ -32,7 +32,7 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"  # vault (solo ricevente)
 
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-          MINT_BUMPER="5bp5PwTyu4i1hGyQsRwRYqiR2CmxyHt2cPJGEbXEbonk"
+          MINT_BUMPER="9CaQUthsVMugZzMvskrrvcHXyjFqHGdNtGkPT8QSRACE"
           MINT_PUNCHY="GnYufMbTAMz1DzkSN2DmwkBzjMTLkM22WvQuN1VCbonk"
 
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
@@ -47,7 +47,7 @@ jobs:
           get_balance() {
             local WALLET=$1
             local MINT=$2
-            local OUTPUT
+            local OUTPUT RAW_SUM DEC BAL
             OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 -X POST "$API_RPC" \
               -H "Content-Type: application/json" \
               -d '{
@@ -60,7 +60,6 @@ jobs:
               echo "0.00000000"; return
             fi
 
-            local BAL DEC
             read -r BAL DEC <<<"$(echo "$OUTPUT" | jq -r --arg M "$MINT" '
               (.result.items // [])[] | select(.id == $M) |
               "\(.token_info.balance) \(.token_info.decimals)"
@@ -69,9 +68,65 @@ jobs:
             BAL=${BAL:-0}; DEC=${DEC:-0}
             if [[ "$BAL" != "0" ]]; then
               echo "scale=8; $BAL / (10 ^ $DEC)" | bc -l
+              return
+            fi
+
+            # Fallback più affidabile per SPL appena creati: legge direttamente i token accounts.
+            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 -X POST "$API_RPC" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "jsonrpc":"2.0","id":"1","method":"getTokenAccountsByOwner",
+                "params":[
+                  "'"$WALLET"'",
+                  {"mint":"'"$MINT"'"},
+                  {"encoding":"jsonParsed"}
+                ]
+              }' || true)
+
+            if ! jq -e . >/dev/null 2>&1 <<<"$OUTPUT"; then
+              echo "0.00000000"; return
+            fi
+
+            read -r RAW_SUM DEC <<<"$(echo "$OUTPUT" | jq -r '
+              [
+                .result.value[]?.account.data.parsed.info.tokenAmount.amount // "0"
+              ] as $amounts
+              |
+              (($amounts | map(tonumber) | add) // 0 | tostring) + " " +
+              ((.result.value[0]?.account.data.parsed.info.tokenAmount.decimals // 0) | tostring)
+            ')"
+
+            RAW_SUM=${RAW_SUM:-0}; DEC=${DEC:-0}
+            if [[ "$RAW_SUM" != "0" ]]; then
+              echo "scale=8; $RAW_SUM / (10 ^ $DEC)" | bc -l
             else
               echo "0.00000000"
             fi
+          }
+
+          get_price_usd() {
+            local MINT=$1
+            local PRICE=""
+            local JUP_JSON=""
+            local DS_JSON=""
+
+            if JUP_JSON=$(curl -sS --retry 1 --max-time 10 "https://price.jup.ag/v4/price?ids=$MINT&vsToken=USDC" 2>/dev/null); then
+              PRICE=$(echo "$JUP_JSON" | jq -r --arg ID "$MINT" '.data[$ID].price // (.data[]?.price) // empty')
+            fi
+
+            if [[ -z "${PRICE:-}" ]]; then
+              if DS_JSON=$(curl -sS --retry 2 --max-time 20 "https://api.dexscreener.com/latest/dex/tokens/$MINT" 2>/dev/null); then
+                PRICE=$(echo "$DS_JSON" | jq -r '
+                  (.pairs // [])
+                  | map(select(.chainId == "solana"))
+                  | sort_by((.liquidity.usd // 0) | tonumber)
+                  | last
+                  | .priceUsd // empty
+                ')
+              fi
+            fi
+
+            echo "$PRICE"
           }
 
           fetch_page() {
@@ -160,39 +215,15 @@ jobs:
             "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" \
             | jq -r '."nummus-aeternitas".usd // 0')
 
-          # ====== Prezzo BUMPER: Jupiter USDC -> fallback DexScreener ======
-          PRICE_BUMPER=""
-          # 1) Jupiter (può fallire per DNS nel runner)
-          if JUP_JSON=$(curl -sS --retry 1 --max-time 10 "https://price.jup.ag/v4/price?ids=$MINT_BUMPER&vsToken=USDC" 2>/dev/null); then
-            PRICE_BUMPER=$(echo "$JUP_JSON" | jq -r --arg ID "$MINT_BUMPER" '.data[$ID].price // (.data[]?.price) // empty')
-          fi
-
-          # 2) Fallback DexScreener (senza chiave)
+          # ====== Prezzo PISTA: Jupiter USDC -> fallback DexScreener ======
+          PRICE_BUMPER=$(get_price_usd "$MINT_BUMPER")
           if [[ -z "${PRICE_BUMPER:-}" ]]; then
-            if DS_JSON=$(curl -sS --retry 2 --max-time 20 "https://api.dexscreener.com/latest/dex/tokens/$MINT_BUMPER" 2>/dev/null); then
-              PRICE_BUMPER=$(echo "$DS_JSON" | jq -r '.pairs[0].priceUsd // empty')
-            fi
-          fi
-
-          if [[ -z "${PRICE_BUMPER:-}" ]]; then
-            echo "❌ Nessun prezzo disponibile per BUMPER (Jupiter DNS KO e DexScreener vuoto) — esco."
+            echo "❌ Nessun prezzo disponibile per PISTA (Jupiter/DexScreener vuoti) — esco."
             exit 1
           fi
 
           # ====== Prezzo PUNCHY: Jupiter USDC -> fallback DexScreener ======
-          PRICE_PUNCHY=""
-          # 1) Jupiter
-          if JUP_JSON_PUNCHY=$(curl -sS --retry 1 --max-time 10 "https://price.jup.ag/v4/price?ids=$MINT_PUNCHY&vsToken=USDC" 2>/dev/null); then
-            PRICE_PUNCHY=$(echo "$JUP_JSON_PUNCHY" | jq -r --arg ID "$MINT_PUNCHY" '.data[$ID].price // (.data[]?.price) // empty')
-          fi
-
-          # 2) Fallback DexScreener
-          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
-            if DS_JSON_PUNCHY=$(curl -sS --retry 2 --max-time 20 "https://api.dexscreener.com/latest/dex/tokens/$MINT_PUNCHY" 2>/dev/null); then
-              PRICE_PUNCHY=$(echo "$DS_JSON_PUNCHY" | jq -r '.pairs[0].priceUsd // empty')
-            fi
-          fi
-
+          PRICE_PUNCHY=$(get_price_usd "$MINT_PUNCHY")
           if [[ -z "${PRICE_PUNCHY:-}" ]]; then
             echo "❌ Nessun prezzo disponibile per PUNCHY (Jupiter e DexScreener vuoti) — esco."
             exit 1
