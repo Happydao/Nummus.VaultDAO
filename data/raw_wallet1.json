@@ -24258,6 +24258,105 @@
     "events": {}
   },
   {
+    "description": "",
+    "type": "EXECUTE_CONFIG_TRANSACTION",
+    "source": "SQUADS_V4",
+    "fee": 6844,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "2P5YzPyYfTsAFoEJrb413ZNwRZzyas8GmiTQ6sF1Jy8NK1EQ6QJjVaXH56UMebAhzE2A62mWzpQCdzTjzU5nAwe",
+    "slot": 408322507,
+    "timestamp": 1774267367,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "amount": 100000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -106844,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "nativeBalanceChange": 100000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "4vPTZBXzNdWZJAw1mefxwQTULZBhJgE5TipkZUvxyErK",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "ComputeBudget111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "CmHFJqgPiLGWU2pzue3rcoSCaczf98WnQSqLeq59BCmU",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [],
+        "data": "EQYpTR",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [],
+        "data": "3VfkVU6kUp3h",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"
+        ],
+        "data": "3Bxs4ThwQbE4vyj5",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "4vPTZBXzNdWZJAw1mefxwQTULZBhJgE5TipkZUvxyErK",
+          "CmHFJqgPiLGWU2pzue3rcoSCaczf98WnQSqLeq59BCmU",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "11111111111111111111111111111111"
+        ],
+        "data": "LAWgcozcxsH",
+        "programId": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "innerInstructions": []
+      }
+    ],
+    "lighthouseData": null,
+    "events": {}
+  },
+  {
     "description": "JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k swapped 6451.612903 NUMMUS for 0.00091941 tBTC",
     "type": "SWAP",
     "source": "JUPITER",
