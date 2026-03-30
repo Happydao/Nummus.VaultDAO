@@ -87476,6 +87476,105 @@
   },
   {
     "description": "",
+    "type": "EXECUTE_CONFIG_TRANSACTION",
+    "source": "SQUADS_V4",
+    "fee": 6529,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "3G8nBSAAQzcVBDiGBbZ3ve4Xy3xSobZaNxbaLhs99Em1aUCy5z2in6nB9Kx6AET34yV5Zd9Z5ELcYkqnA9wEcBmc",
+    "slot": 409856667,
+    "timestamp": 1774868621,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "amount": 100000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -106529,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "nativeBalanceChange": 100000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HQjhwUCuAjUcEAsKtSE4bmkzaXgU6DiMGSPk1XhjGm6i",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "ComputeBudget111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "C7VaFw1RB7UvdCjxCuwJjAYYGR5r5DLVCdcdMSFkUiSe",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [],
+        "data": "FZFbB5",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [],
+        "data": "3RJ7gKui66R5",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"
+        ],
+        "data": "3Bxs4ThwQbE4vyj5",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "HQjhwUCuAjUcEAsKtSE4bmkzaXgU6DiMGSPk1XhjGm6i",
+          "C7VaFw1RB7UvdCjxCuwJjAYYGR5r5DLVCdcdMSFkUiSe",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "11111111111111111111111111111111"
+        ],
+        "data": "LAWgcozcxsH",
+        "programId": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "innerInstructions": []
+      }
+    ],
+    "lighthouseData": null,
+    "events": {}
+  },
+  {
+    "description": "",
     "type": "APPROVE_PROPOSAL",
     "source": "SQUADS_V4",
     "fee": 7615,
@@ -173434,6 +173533,97 @@
         }
       ]
     },
+    "events": {}
+  },
+  {
+    "description": "",
+    "type": "APPROVE_PROPOSAL",
+    "source": "SQUADS_V4",
+    "fee": 7551,
+    "feePayer": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+    "signature": "4QZARbUt6o6Wy5ZCEMqRa1JHBWRvh5uL8fEHfERk6CQZk1rC6tgwypbScdG2BbuXgKFgLamB9z4Z2og8Dsszd5GY",
+    "slot": 409851908,
+    "timestamp": 1774866761,
+    "tokenTransfers": [],
+    "nativeTransfers": [
+      {
+        "fromUserAccount": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "toUserAccount": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "amount": 100000
+      }
+    ],
+    "accountData": [
+      {
+        "account": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+        "nativeBalanceChange": -107551,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+        "nativeBalanceChange": 100000,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "HQjhwUCuAjUcEAsKtSE4bmkzaXgU6DiMGSPk1XhjGm6i",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "ComputeBudget111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "11111111111111111111111111111111",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      },
+      {
+        "account": "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+        "nativeBalanceChange": 0,
+        "tokenBalanceChanges": []
+      }
+    ],
+    "transactionError": null,
+    "instructions": [
+      {
+        "accounts": [],
+        "data": "3P85L7A2L2F9",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [],
+        "data": "G9oAjh",
+        "programId": "ComputeBudget111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"
+        ],
+        "data": "3Bxs4ThwQbE4vyj5",
+        "programId": "11111111111111111111111111111111",
+        "innerInstructions": []
+      },
+      {
+        "accounts": [
+          "Fu99DhMC2Gt9vyR3mfu5YJu1yUYUD6pZHVRPx1e8r5eX",
+          "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B",
+          "HQjhwUCuAjUcEAsKtSE4bmkzaXgU6DiMGSPk1XhjGm6i"
+        ],
+        "data": "2qRHAEUKPa4CF",
+        "programId": "SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf",
+        "innerInstructions": []
+      }
+    ],
+    "lighthouseData": null,
     "events": {}
   },
   {
