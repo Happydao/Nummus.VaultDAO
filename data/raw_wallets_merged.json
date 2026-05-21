@@ -339978,8 +339978,8 @@
   },
   {
     "description": "",
-    "type": "INITIALIZE_ACCOUNT",
-    "source": "ASSOCIATED_TOKEN_PROGRAM",
+    "type": "SWAP",
+    "source": "BYREAL",
     "fee": 45911,
     "feePayer": "JD25qVdtd65FoiXNmR89JjmoJdYk9sjYQeSTZAALFiMy",
     "signature": "Esy35Mt3J5NBbBNVKs6mk7shd39nAZgFVPCaDCzhZNCGVmEP7ZYgc22apibbprvAc42pNSSBVKYszLwymQUzj67",
@@ -340810,7 +340810,37 @@
       }
     ],
     "lighthouseData": null,
-    "events": {}
+    "events": {
+      "swap": {
+        "nativeInput": null,
+        "nativeOutput": null,
+        "tokenInputs": [
+          {
+            "userAccount": "CapuXNQoDviLvU1PxFiizLgPNQCxrsag1uMeyk6zLVps",
+            "tokenAccount": "C5eU28PS4qSH6NpcP1UtHUCHWYNmUZXGkx7Q4HS6PVUj",
+            "rawTokenAmount": {
+              "tokenAmount": "13591542",
+              "decimals": 6
+            },
+            "mint": "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4"
+          }
+        ],
+        "tokenOutputs": [
+          {
+            "userAccount": "HDQqC3z3kncjdeyrCBM6v8VE1mbPcn2xbDmWNXzBBKJC",
+            "tokenAccount": "EvyFmKMpoAasYimRhebbeHCoh8uyhDRNi8JgM4Rm5vJq",
+            "rawTokenAmount": {
+              "tokenAmount": "62717608",
+              "decimals": 6
+            },
+            "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          }
+        ],
+        "nativeFees": [],
+        "tokenFees": [],
+        "innerSwaps": []
+      }
+    }
   },
   {
     "description": "AoXJQjDcK7C28ecdNVQjGjXW8V6nxR7NY7rBFhdhUc5B removed a global nft bid on MAGIC_EDEN",
