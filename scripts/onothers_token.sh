@@ -8,7 +8,7 @@ set -euo pipefail
 API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
 # Wallet & mint (PISTA su Solana)
-WALLET="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"
+WALLET="3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh"
 MINT_BUMPER="9CaQUthsVMugZzMvskrrvcHXyjFqHGdNtGkPT8QSRACE"
 MINT_PUNCHY="GnYufMbTAMz1DzkSN2DmwkBzjMTLkM22WvQuN1VCbonk"
 
