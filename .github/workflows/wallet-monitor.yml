@@ -110,8 +110,8 @@ jobs:
             local JUP_JSON=""
             local DS_JSON=""
 
-            if JUP_JSON=$(curl -sS --retry 1 --max-time 10 "https://price.jup.ag/v4/price?ids=$MINT&vsToken=USDC" 2>/dev/null); then
-              PRICE=$(echo "$JUP_JSON" | jq -r --arg ID "$MINT" '.data[$ID].price // (.data[]?.price) // empty')
+            if JUP_JSON=$(curl -sS --retry 2 --max-time 15 "https://lite-api.jup.ag/price/v3?ids=$MINT" 2>/dev/null); then
+              PRICE=$(echo "$JUP_JSON" | jq -r --arg ID "$MINT" '.[$ID].usdPrice // .[$ID].price // empty')
             fi
 
             if [[ -z "${PRICE:-}" ]]; then
@@ -127,6 +127,13 @@ jobs:
             fi
 
             echo "$PRICE"
+          }
+
+          get_saved_price_usd() {
+            local FILTER=$1
+            if [[ -f data/prices.json ]]; then
+              jq -r "$FILTER // empty" data/prices.json 2>/dev/null || true
+            fi
           }
 
           fetch_page() {
@@ -223,9 +230,15 @@ jobs:
           fi
 
           # ====== Prezzo PUNCHY: Jupiter USDC -> fallback DexScreener ======
+          PRICE_PUNCHY_SOURCE="live"
           PRICE_PUNCHY=$(get_price_usd "$MINT_PUNCHY")
           if [[ -z "${PRICE_PUNCHY:-}" ]]; then
-            echo "❌ Nessun prezzo disponibile per PUNCHY (Jupiter e DexScreener vuoti) — esco."
+            PRICE_PUNCHY=$(get_saved_price_usd '.punchy.price_usd')
+            PRICE_PUNCHY_SOURCE="saved"
+            echo "⚠️ Nessun prezzo live disponibile per PUNCHY; uso ultimo prezzo salvato: ${PRICE_PUNCHY:-missing}"
+          fi
+          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
+            echo "❌ Nessun prezzo disponibile per PUNCHY e nessun prezzo salvato — esco."
             exit 1
           fi
 
@@ -267,6 +280,7 @@ jobs:
             --arg bumper_qty "$BUMPER_BAL_W2" \
             --arg bumper_val "$VALUE_BUMPER" \
             --arg punchy_price "$PRICE_PUNCHY" \
+            --arg punchy_price_source "$PRICE_PUNCHY_SOURCE" \
             --arg punchy_qty "$PUNCHY_BAL_W2" \
             --arg punchy_val "$VALUE_PUNCHY" \
             --arg w1_bal "$TBTC_BAL_W1" \
@@ -287,6 +301,7 @@ jobs:
               punchy: {
                 mint: "'"$MINT_PUNCHY"'",
                 price_usd: ($punchy_price | tonumber),
+                price_source: $punchy_price_source,
                 quantity: ($punchy_qty | tonumber),
                 total_value_usd: ($punchy_val | tonumber)
               },
