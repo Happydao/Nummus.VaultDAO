@@ -733,10 +733,10 @@
       if(!res.ok) throw new Error('prices.json not found');
       const p = await res.json();
 
-      document.getElementById('tbtc-price').textContent   = `$${p.tbtc_price_usd}`;
-      document.getElementById('nummus-price').textContent = `$${p.nummus_price_usd}`;
-      document.getElementById('bumper-price').textContent = p.bumper ? `$${p.bumper.price_usd}` : '$—';
-      document.getElementById('punchy-price').textContent = p.punchy ? `$${p.punchy.price_usd}` : '$—';
+      document.getElementById('tbtc-price').textContent   = fmtPrice(p.tbtc_price_usd);
+      document.getElementById('nummus-price').textContent = fmtPrice(p.nummus_price_usd);
+      document.getElementById('bumper-price').textContent = p.bumper ? fmtPrice(p.bumper.price_usd) : '$—';
+      document.getElementById('punchy-price').textContent = p.punchy ? fmtPrice(p.punchy.price_usd) : '$—';
 
       const bumperQty = Number(p.bumper?.quantity ?? 0);
       const bumperVal = Number(p.bumper?.total_value_usd ?? 0);
@@ -774,6 +774,11 @@
       }
     }
 
+    function fmtPrice(n){
+      const value = Number(n);
+      if(!Number.isFinite(value)) return '$—';
+      return `$${value.toLocaleString(undefined,{maximumFractionDigits:8})}`;
+    }
     function fmtTBTC(n){ return Number(n||0).toFixed(8); }
     function fmtUSD(n){ return Number(n||0).toFixed(2); }
 
