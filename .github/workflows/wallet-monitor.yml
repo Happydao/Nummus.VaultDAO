@@ -328,3 +328,13 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
+      - name: Trigger NUMMUS NAV snapshot
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ secrets.NAV_DISPATCH_TOKEN }}
+        run: |
+          gh api \
+            --method POST \
+            repos/Happydao/nummus-nav-dashboard/actions/workflows/deploy-pages.yml/dispatches \
+            -f ref=main
