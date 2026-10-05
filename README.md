@@ -1,5 +1,5 @@
 $NUMMUS → tBTC Monitor
-A live dashboard tracking the swap of $NUMMUS into tBTC on the Solana blockchain.
+A live dashboard tracking the accumulation of tBTC through $NUMMUS swaps on the Solana blockchain.
 
 🔗 Live Monitor: https://happydao.github.io/Nummus.VaultDAO/
 
@@ -9,7 +9,7 @@ Real-time tracking of two key wallets
 Swap Wallet: 3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh
 Vault Wallet: HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s
 
-Displays tBTC balance and last 30 transfers (in/out)
+Displays tBTC balances, USD value, and the last 30 tBTC transfers (in/out)
 
 Auto-updates every hour (UTC)
 

@@ -32,8 +32,6 @@ jobs:
           WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"  # vault (solo ricevente)
 
           MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-          MINT_BUMPER="9CaQUthsVMugZzMvskrrvcHXyjFqHGdNtGkPT8QSRACE"
-          MINT_PUNCHY="GnYufMbTAMz1DzkSN2DmwkBzjMTLkM22WvQuN1VCbonk"
 
           API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
@@ -104,38 +102,6 @@ jobs:
             fi
           }
 
-          get_price_usd() {
-            local MINT=$1
-            local PRICE=""
-            local JUP_JSON=""
-            local DS_JSON=""
-
-            if JUP_JSON=$(curl -sS --retry 2 --max-time 15 "https://lite-api.jup.ag/price/v3?ids=$MINT" 2>/dev/null); then
-              PRICE=$(echo "$JUP_JSON" | jq -r --arg ID "$MINT" '.[$ID].usdPrice // .[$ID].price // empty')
-            fi
-
-            if [[ -z "${PRICE:-}" ]]; then
-              if DS_JSON=$(curl -sS --retry 2 --max-time 20 "https://api.dexscreener.com/latest/dex/tokens/$MINT" 2>/dev/null); then
-                PRICE=$(echo "$DS_JSON" | jq -r '
-                  (.pairs // [])
-                  | map(select(.chainId == "solana"))
-                  | sort_by((.liquidity.usd // 0) | tonumber)
-                  | last
-                  | .priceUsd // empty
-                ')
-              fi
-            fi
-
-            echo "$PRICE"
-          }
-
-          get_saved_price_usd() {
-            local FILTER=$1
-            if [[ -f data/prices.json ]]; then
-              jq -r "$FILTER // empty" data/prices.json 2>/dev/null || true
-            fi
-          }
-
           fetch_page() {
             local URL=$1
             local RES
@@ -190,8 +156,6 @@ jobs:
           # ------------ BILANCI ------------
           TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
           TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
-          BUMPER_BAL_W2=$(get_balance "$WALLET2" "$MINT_BUMPER")
-          PUNCHY_BAL_W2=$(get_balance "$WALLET2" "$MINT_PUNCHY")
 
           # ------------ TRANSAZIONI ------------
           XFERS_W1=$(fetch_transactions "$WALLET1" "$HELIUS_PAGES_W1" "$HELIUS_LIMIT" "$HELIUS_DELAY_SEC")
@@ -201,14 +165,6 @@ jobs:
           XFERS_W2_DEDUP=$(echo "$XFERS_W2" | jq 'unique_by(.signature)')
           MERGED_WALLETS=$(jq -s '[.[] | select(type=="array")] | add // [] | unique_by(.signature)' \
             <<<"$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
-
-          # debug/raw
-          echo "$XFERS_W1_DEDUP" > data/raw_wallet1.json
-          echo "$XFERS_W2_DEDUP" > data/raw_wallet2.json
-          echo "$MERGED_WALLETS" > data/raw_wallets_merged.json
-
-          echo "$XFERS_W1_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet1_transfers.json
-          echo "$XFERS_W2_DEDUP" | jq '.[0:10] | map({signature, timestamp, tokenTransfers})' > data/debug_wallet2_transfers.json
 
           LAST_TBTC_W1=$(parse_transfers "$MERGED_WALLETS" "$WALLET1" "$MINT_TBTC")
           LAST_TBTC_W2=$(parse_transfers "$MERGED_WALLETS" "$WALLET2" "$MINT_TBTC")
@@ -222,33 +178,9 @@ jobs:
             "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" \
             | jq -r '."nummus-aeternitas".usd // 0')
 
-          # ====== Prezzo PISTA: Jupiter USDC -> fallback DexScreener ======
-          PRICE_BUMPER=$(get_price_usd "$MINT_BUMPER")
-          if [[ -z "${PRICE_BUMPER:-}" ]]; then
-            echo "❌ Nessun prezzo disponibile per PISTA (Jupiter/DexScreener vuoti) — esco."
-            exit 1
-          fi
-
-          # ====== Prezzo PUNCHY: Jupiter USDC -> fallback DexScreener ======
-          PRICE_PUNCHY_SOURCE="live"
-          PRICE_PUNCHY=$(get_price_usd "$MINT_PUNCHY")
-          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
-            PRICE_PUNCHY=$(get_saved_price_usd '.punchy.price_usd')
-            PRICE_PUNCHY_SOURCE="saved"
-            echo "⚠️ Nessun prezzo live disponibile per PUNCHY; uso ultimo prezzo salvato: ${PRICE_PUNCHY:-missing}"
-          fi
-          if [[ -z "${PRICE_PUNCHY:-}" ]]; then
-            echo "❌ Nessun prezzo disponibile per PUNCHY e nessun prezzo salvato — esco."
-            exit 1
-          fi
-
           # ------------ VALORI USD ------------
           VALUE_W1=$(echo "scale=2; $TBTC_BAL_W1 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
           VALUE_W2=$(echo "scale=2; $TBTC_BAL_W2 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
-          VALUE_BUMPER=$(echo "scale=2; $BUMPER_BAL_W2 * $PRICE_BUMPER" | bc -l | xargs printf "%.2f")
-          VALUE_PUNCHY=$(echo "scale=2; $PUNCHY_BAL_W2 * $PRICE_PUNCHY" | bc -l | xargs printf "%.2f")
-
-          TOTAL_USD_VAULT=$(echo "scale=2; $VALUE_W2 + $VALUE_BUMPER + $VALUE_PUNCHY" | bc -l | xargs printf "%.2f")
 
           # ------------ OUTPUT JSON (compatibile con index) ------------
           jq -n \
@@ -276,35 +208,14 @@ jobs:
           jq -n \
             --arg price "$PRICE_TBTC" \
             --arg nummus "$PRICE_NUMMUS" \
-            --arg bumper_price "$PRICE_BUMPER" \
-            --arg bumper_qty "$BUMPER_BAL_W2" \
-            --arg bumper_val "$VALUE_BUMPER" \
-            --arg punchy_price "$PRICE_PUNCHY" \
-            --arg punchy_price_source "$PRICE_PUNCHY_SOURCE" \
-            --arg punchy_qty "$PUNCHY_BAL_W2" \
-            --arg punchy_val "$VALUE_PUNCHY" \
             --arg w1_bal "$TBTC_BAL_W1" \
             --arg w1_val "$VALUE_W1" \
             --arg w2_bal "$TBTC_BAL_W2" \
             --arg w2_val "$VALUE_W2" \
-            --arg total_vault_usd "$TOTAL_USD_VAULT" \
             --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
               tbtc_price_usd: ($price | tonumber),
               nummus_price_usd: ($nummus | tonumber),
-              bumper: {
-                mint: "'"$MINT_BUMPER"'",
-                price_usd: ($bumper_price | tonumber),
-                quantity: ($bumper_qty | tonumber),
-                total_value_usd: ($bumper_val | tonumber)
-              },
-              punchy: {
-                mint: "'"$MINT_PUNCHY"'",
-                price_usd: ($punchy_price | tonumber),
-                price_source: $punchy_price_source,
-                quantity: ($punchy_qty | tonumber),
-                total_value_usd: ($punchy_val | tonumber)
-              },
               wallet_1: {
                 tbtc_balance: ($w1_bal | tonumber),
                 tbtc_usd_value: ($w1_val | tonumber)
@@ -313,7 +224,7 @@ jobs:
                 tbtc_balance: ($w2_bal | tonumber),
                 tbtc_usd_value: ($w2_val | tonumber)
               },
-              total_usd_value: ($total_vault_usd | tonumber),
+              vault_tbtc_usd_value: ($w2_val | tonumber),
               timestamp: $time
             }' > data/prices.json
 

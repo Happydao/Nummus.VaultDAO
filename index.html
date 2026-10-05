@@ -589,7 +589,7 @@
         </div>
         <div class="brand-text">
           <h1>NUMMUS ↠ tBTC Vault DAO</h1>
-          <div class="subtitle">Two-portfolio on-chain treasury monitor</div>
+          <div class="subtitle">On-chain tBTC accumulation monitor</div>
         </div>
       </div>
 
@@ -604,16 +604,6 @@
             <span class="dot" style="background:var(--chipB)"></span>
             <span class="label">tBTC</span>
             <span class="val" id="tbtc-price">$—</span>
-          </div>
-          <div class="chip">
-            <span class="dot" style="background:var(--chipC)"></span>
-            <span class="label">PISTA</span>
-            <span class="val" id="bumper-price">$—</span>
-          </div>
-          <div class="chip">
-            <span class="dot" style="background:var(--chipC)"></span>
-            <span class="label">PUNCHY</span>
-            <span class="val" id="punchy-price">$—</span>
           </div>
         </div>
 
@@ -635,12 +625,12 @@
         <div class="flow-arrow">↠</div>
         <div class="flow-node">
           <small>PORTFOLIO 2</small>
-          <span>Vault DAO holdings</span>
+          <span>tBTC accumulation vault</span>
         </div>
       </div>
       <div class="flow-note">
-        All holdings in Portfolio 2 (tBTC and other assets)<br>
-        are governed on Realms — <b>1 NUMMUS = 1 vote</b> over the treasury.
+        tBTC accumulated in Portfolio 2 is governed on Realms —<br>
+        <b>1 NUMMUS = 1 vote</b> over the treasury.
       </div>
     </section>
 
@@ -665,8 +655,8 @@
       </article>
 
       <article class="card" id="vault-card">
-        <div class="card-tag">Portfolio 2 · DAO-governed vault</div>
-        <h3>Nummus Aeternitas Vault DAO</h3>
+        <div class="card-tag">Portfolio 2 · DAO-governed tBTC vault</div>
+        <h3>Nummus Aeternitas tBTC Vault</h3>
         <div class="realms">
           <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">
             NUMMUS holder voting
@@ -683,12 +673,10 @@
 
         <div class="balances">
           <div class="kv">
-            <div class="k">Total vault value (USD)</div>
+            <div class="k">tBTC value in vault (USD)</div>
             <div class="v" id="vault-total-value">—</div>
           </div>
           <div class="line" id="vault-balance"></div>
-          <div class="line" id="vault-bumper-info"></div>
-          <div class="line" id="vault-punchy-info"></div>
         </div>
 
         <div class="txs" id="vault-transfers">Loading transactions…</div>
@@ -701,9 +689,9 @@
       <!-- sotto la card sinistra -->
       <div class="under-left" aria-label="Nummus Hub overview">
         <div class="info-block">
-          <p>Explore the full $NUMMUS mechanism in a simplified way. Through the interactive <a class="hub-link" href="https://happydao.github.io/Nummus.Hub/" target="_blank" rel="noopener">NUMMUS HUB</a>, you can visually follow the entire process: automated swaps from NUMMUS to tBTC, the flow of assets into the community Vault, and all on-chain data related to each operation.</p>
-          <p>The Hub provides an interactive overview of swap vaults, transaction paths, balances, and on-chain confirmations, while also illustrating the NUMMUS burn mechanism driven by Torrino DAO's trading activity.</p>
-          <p>All core dynamics of NUMMUS are explained within a single, unified interactive interface.</p>
+          <p>NUMMUS is designed around a single accumulation path: automated swaps from NUMMUS to tBTC, followed by the transfer of tBTC into the community Vault.</p>
+          <p>Through the interactive <a class="hub-link" href="https://happydao.github.io/Nummus.Hub/" target="_blank" rel="noopener">NUMMUS HUB</a>, you can follow each tBTC swap, the route to the DAO vault, and the on-chain confirmations behind the accumulated balance.</p>
+          <p>Every displayed treasury metric is focused on tBTC accumulation and the NUMMUS governance that oversees it.</p>
         </div>
       </div>
 
@@ -735,43 +723,11 @@
 
       document.getElementById('tbtc-price').textContent   = fmtPrice(p.tbtc_price_usd);
       document.getElementById('nummus-price').textContent = fmtPrice(p.nummus_price_usd);
-      document.getElementById('bumper-price').textContent = p.bumper ? fmtPrice(p.bumper.price_usd) : '$—';
-      document.getElementById('punchy-price').textContent = p.punchy ? fmtPrice(p.punchy.price_usd) : '$—';
-
-      const bumperQty = Number(p.bumper?.quantity ?? 0);
-      const bumperVal = Number(p.bumper?.total_value_usd ?? 0);
-
-      const punchyQty = Number(p.punchy?.quantity ?? 0);
-      const punchyVal = Number(p.punchy?.total_value_usd ?? 0);
-
-      const totalUsd  = Number(p.total_usd_value) || 0;
+      const vaultTbtcUsd = Number(p.vault_tbtc_usd_value) || 0;
 
       document.getElementById('vault-total-value').textContent =
-        `$${totalUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+        `$${vaultTbtcUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
-      // PISTA info
-      const bumperEl = document.getElementById('vault-bumper-info');
-      if (p.bumper) {
-        bumperEl.innerHTML = `
-          <img src="images/pista.png" alt="PISTA">
-          <span class="k">PISTA</span>
-          <span class="v">${bumperQty.toLocaleString()} tokens</span>
-          <span class="muted">($${bumperVal.toFixed(2)})</span>`;
-      } else {
-        bumperEl.innerHTML = '';
-      }
-
-      // PUNCHY info
-      const punchyEl = document.getElementById('vault-punchy-info');
-      if (p.punchy) {
-        punchyEl.innerHTML = `
-          <img src="images/punchy.jpg" alt="PUNCHY">
-          <span class="k">PUNCHY</span>
-          <span class="v">${punchyQty.toLocaleString()} tokens</span>
-          <span class="muted">($${punchyVal.toFixed(2)})</span>`;
-      } else {
-        punchyEl.innerHTML = '';
-      }
     }
 
     function fmtPrice(n){
