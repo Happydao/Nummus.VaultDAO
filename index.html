@@ -66,6 +66,25 @@
       padding:clamp(18px,2.8vw,26px);
     }
 
+    .maintenance-banner{
+      margin-bottom:24px;
+      padding:var(--pad);
+      border:1px solid rgba(255,195,107,.55);
+      border-radius:var(--radius);
+      background:rgba(58,39,14,.94);
+      color:var(--text);
+    }
+    .maintenance-banner h2{
+      margin:0 0 10px;
+      color:#ffd38f;
+      font-size:clamp(18px,2.4vw,23px);
+    }
+    .maintenance-banner p{
+      margin:0;
+      font-size:14px;
+      line-height:1.7;
+    }
+
     /* ===== TOP BAR ===== */
     header{
       display:flex;
@@ -580,6 +599,11 @@
   <div class="scan"></div>
 
   <div class="wrap">
+    <section class="maintenance-banner" aria-labelledby="maintenance-title">
+      <h2 id="maintenance-title">Dashboard under maintenance</h2>
+      <p>Following the community’s decision, Nummus is transitioning from a tBTC accumulation strategy to a Zcash (ZEC) accumulation strategy. Existing tBTC holdings are being converted to ZEC. Dashboard updates are paused and all figures are held at their November 17, 2026 values. Points after that date repeat the frozen values and do not represent new observations.</p>
+    </section>
+
     <!-- HEADER -->
     <header>
       <div class="brand-block">
@@ -683,7 +707,7 @@
       </article>
 
       <div class="update-row">
-        <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
+        <div id="timestamp">⏳ Loading… <span class="muted">(automatic updates paused)</span></div>
       </div>
 
       <!-- sotto la card sinistra -->
@@ -774,7 +798,7 @@
       renderTx('vault-transfers', d.vault_wallet_2.last_tbtc_transfers);
 
       document.getElementById('timestamp').innerHTML =
-        'Last update: ' + (d.timestamp || '—') + ' <span class="muted">(updates every hour, UTC)</span>';
+        'Data frozen as of: ' + (d.timestamp || '—') + ' <span class="muted">(automatic updates paused)</span>';
     }
 
     (async function init(){

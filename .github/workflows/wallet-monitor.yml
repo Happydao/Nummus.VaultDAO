@@ -1,12 +1,13 @@
 name: Monitor Vault + Swap Events
 
 on:
-  schedule:
-    - cron: '0 * * * *'   # ogni ora (UTC)
+  # Scheduled updates are suspended during the Zcash transition.
   workflow_dispatch:
 
 jobs:
   monitor:
+    # Keep manual runs from overwriting the November 17, 2026 snapshot.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
