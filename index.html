@@ -447,7 +447,12 @@
       align-items:center;
       margin-top:4px;
     }
-    .under-left{grid-column:1;}
+    .under-left{
+      grid-column:1 / -1;
+      display:flex;
+      justify-content:center;
+      text-align:center;
+    }
     .under-right{grid-column:2;}
     .update-row{
       grid-column:1 / -1;
@@ -688,7 +693,7 @@
         <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
       </div>
 
-      <!-- sotto la card sinistra -->
+      <!-- centrato sotto entrambe le card -->
       <div class="under-left" aria-label="Nummus Hub overview">
         <div class="info-block">
           <p>NUMMUS is designed around a single accumulation path: automated swaps from NUMMUS to ZEC, followed by the transfer of ZEC into the community Vault.</p>
