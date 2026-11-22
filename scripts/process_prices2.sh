@@ -19,32 +19,35 @@ fix_decimal() {
   printf "%.${scale}f" "$v"
 }
 
+# Refuse the archived schema until the first successful ZEC collection.
+jq -e '.asset == "ZEC" and .mint == "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS"' "$INPUT" >/dev/null
+
 # Estrai e sanifica
-total_tbtc=$(num_or_zero "$(jq -r '.total_tbtc_balance // 0' "$INPUT")")
-tbtc_price=$(num_or_zero "$(jq -r '.tbtc_price_usd // 0' "$INPUT")")
+total_zec=$(num_or_zero "$(jq -r '.vault_wallet_2.zec_balance // .wallet_2.zec_balance // 0' "$INPUT")")
+zec_price=$(num_or_zero "$(jq -r '.zec_price_usd // 0' "$INPUT")")
 nummus_price=$(num_or_zero "$(jq -r '.nummus_price_usd // 0' "$INPUT")")
 
 # Evita notazione scientifica
-total_tbtc=$(fix_decimal "$total_tbtc" 12)
-tbtc_price=$(fix_decimal "$tbtc_price" 12)
+total_zec=$(fix_decimal "$total_zec" 12)
+zec_price=$(fix_decimal "$zec_price" 12)
 nummus_price=$(fix_decimal "$nummus_price" 12)
 
 fraction="0.0001"
 
-tbtc_for_10000=$(echo "scale=8; $total_tbtc * $fraction" | bc -l)
-usd_value_of_that_tbtc=$(echo "scale=2; $tbtc_for_10000 * $tbtc_price" | bc -l)
+zec_for_10000=$(echo "scale=8; $total_zec * $fraction" | bc -l)
+usd_value_of_that_zec=$(echo "scale=2; $zec_for_10000 * $zec_price" | bc -l)
 usd_value_of_10000_nummus=$(echo "scale=2; 10000 * $nummus_price" | bc -l)
 
-usd_value_of_that_tbtc=$(fix_decimal "$usd_value_of_that_tbtc" 2)
+usd_value_of_that_zec=$(fix_decimal "$usd_value_of_that_zec" 2)
 usd_value_of_10000_nummus=$(fix_decimal "$usd_value_of_10000_nummus" 2)
 
 jq -n \
-  --arg tbtc "$tbtc_for_10000" \
-  --arg usd_tbtc "$usd_value_of_that_tbtc" \
+  --arg zec "$zec_for_10000" \
+  --arg usd_zec "$usd_value_of_that_zec" \
   --arg usd_nummus "$usd_value_of_10000_nummus" \
 '{
-  tbtc_for_10000_nummus: ($tbtc | tonumber),
-  usd_value_of_that_tbtc: ($usd_tbtc | tonumber),
+  zec_for_10000_nummus: ($zec | tonumber),
+  usd_value_of_that_zec: ($usd_zec | tonumber),
   usd_value_of_10000_nummus: ($usd_nummus | tonumber)
 }' > "$OUTPUT"
 

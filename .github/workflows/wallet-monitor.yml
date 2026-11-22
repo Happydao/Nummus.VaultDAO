@@ -1,233 +1,34 @@
-name: Monitor Vault + Swap Events
+name: Monitor ZEC Vault + Swap Events
 
 on:
-  # Scheduled updates are suspended during the Zcash transition.
+  schedule:
+    - cron: '0 * * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/monitor.sh
+      - .github/workflows/wallet-monitor.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wallet-monitor
+  cancel-in-progress: false
 
 jobs:
   monitor:
-    # Keep manual runs from overwriting the November 17, 2026 snapshot.
-    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq bc curl
-
-      - name: Fetch balances, prices, and transactions
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p data
-
-          # ------------ CONFIG ------------
-          WALLET1="3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh"  # swap wallet
-          WALLET2="HtT3yMsAavLQYmd6VSbXSdbAefyZUrrFeEPoTPivde3s"  # vault (solo ricevente)
-
-          MINT_TBTC="6DNSN2BJsaPFdFFc1zP37kkeNe4Usc1Sqkzr9C9vPWcU"
-
-          API_RPC="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
-
-          # Profondità per wallet (solo WALLET2 molto profonda)
-          HELIUS_PAGES_W1=8
-          HELIUS_PAGES_W2=60
-          HELIUS_LIMIT=100
-          HELIUS_DELAY_SEC=0.25
-
-          # ------------ HELPERS ------------
-          get_balance() {
-            local WALLET=$1
-            local MINT=$2
-            local OUTPUT RAW_SUM DEC BAL
-            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 -X POST "$API_RPC" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "jsonrpc":"2.0","id":"1","method":"getAssetsByOwner",
-                "params":{"ownerAddress":"'"$WALLET"'","page":1,"limit":1000,
-                "options":{"showFungible":true,"showZeroBalance":false}}
-              }' || true)
-
-            if ! jq -e . >/dev/null 2>&1 <<<"$OUTPUT"; then
-              echo "0.00000000"; return
-            fi
-
-            read -r BAL DEC <<<"$(echo "$OUTPUT" | jq -r --arg M "$MINT" '
-              (.result.items // [])[] | select(.id == $M) |
-              "\(.token_info.balance) \(.token_info.decimals)"
-            ' | head -n1)"
-
-            BAL=${BAL:-0}; DEC=${DEC:-0}
-            if [[ "$BAL" != "0" ]]; then
-              echo "scale=8; $BAL / (10 ^ $DEC)" | bc -l
-              return
-            fi
-
-            # Fallback più affidabile per SPL appena creati: legge direttamente i token accounts.
-            OUTPUT=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 -X POST "$API_RPC" \
-              -H "Content-Type: application/json" \
-              -d '{
-                "jsonrpc":"2.0","id":"1","method":"getTokenAccountsByOwner",
-                "params":[
-                  "'"$WALLET"'",
-                  {"mint":"'"$MINT"'"},
-                  {"encoding":"jsonParsed"}
-                ]
-              }' || true)
-
-            if ! jq -e . >/dev/null 2>&1 <<<"$OUTPUT"; then
-              echo "0.00000000"; return
-            fi
-
-            read -r RAW_SUM DEC <<<"$(echo "$OUTPUT" | jq -r '
-              [
-                .result.value[]?.account.data.parsed.info.tokenAmount.amount // "0"
-              ] as $amounts
-              |
-              (($amounts | map(tonumber) | add) // 0 | tostring) + " " +
-              ((.result.value[0]?.account.data.parsed.info.tokenAmount.decimals // 0) | tostring)
-            ')"
-
-            RAW_SUM=${RAW_SUM:-0}; DEC=${DEC:-0}
-            if [[ "$RAW_SUM" != "0" ]]; then
-              echo "scale=8; $RAW_SUM / (10 ^ $DEC)" | bc -l
-            else
-              echo "0.00000000"
-            fi
-          }
-
-          fetch_page() {
-            local URL=$1
-            local RES
-            RES=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 "$URL" || true)
-            if jq -e 'type=="array"' >/dev/null 2>&1 <<<"$RES"; then
-              echo "$RES"
-            else
-              echo "[]"
-            fi
-          }
-
-          fetch_transactions() {
-            local WALLET=$1
-            local PAGES=$2
-            local LIMIT=$3
-            local DELAY=$4
-            local ALL_TXS="[]"
-            local LAST_SIG=""
-            for ((i=1;i<=PAGES;i++)); do
-              local URL="https://api.helius.xyz/v0/addresses/$WALLET/transactions?api-key=$HELIUS_API_KEY&limit=$LIMIT"
-              [ -n "$LAST_SIG" ] && URL="$URL&before=$LAST_SIG"
-              local PAGE; PAGE=$(fetch_page "$URL")
-              if [ "$(jq 'length' <<<"$PAGE")" -eq 0 ]; then break; fi
-              ALL_TXS=$(jq -s '[.[] | select(type=="array")] | add // []' <<<"$ALL_TXS $PAGE")
-              LAST_SIG=$(jq -r '.[-1].signature // empty' <<<"$PAGE")
-              [ -z "$LAST_SIG" ] && break
-              sleep "$DELAY"
-            done
-            echo "$ALL_TXS"
-          }
-
-          parse_transfers() {
-            local DATA="$1" WALLET="$2" MINT="$3"
-            jq -c --arg M "$MINT" --arg W "$WALLET" '
-              [ .[]? as $tx
-                | ($tx.tokenTransfers // [])[]
-                | select(.mint == $M and ((.toUserAccount // "") == $W or (.fromUserAccount // "") == $W))
-                | {
-                    signature: $tx.signature,
-                    timestamp_num: (($tx.timestamp // 0) | tonumber),
-                    amount: ((if ((.toUserAccount // "") == $W) then "+" else "-" end)
-                             + ((.tokenAmount | tonumber) | tostring))
-                  }
-              ]
-              | unique_by(.signature)
-              | sort_by(.timestamp_num) | reverse
-              | .[:30]
-              | map({signature, timestamp: (.timestamp_num | todateiso8601), amount})
-            ' <<<"$DATA" 2>/dev/null || echo '[]'
-          }
-
-          # ------------ BILANCI ------------
-          TBTC_BAL_W1=$(get_balance "$WALLET1" "$MINT_TBTC")
-          TBTC_BAL_W2=$(get_balance "$WALLET2" "$MINT_TBTC")
-
-          # ------------ TRANSAZIONI ------------
-          XFERS_W1=$(fetch_transactions "$WALLET1" "$HELIUS_PAGES_W1" "$HELIUS_LIMIT" "$HELIUS_DELAY_SEC")
-          XFERS_W2=$(fetch_transactions "$WALLET2" "$HELIUS_PAGES_W2" "$HELIUS_LIMIT" "$HELIUS_DELAY_SEC")
-
-          XFERS_W1_DEDUP=$(echo "$XFERS_W1" | jq 'unique_by(.signature)')
-          XFERS_W2_DEDUP=$(echo "$XFERS_W2" | jq 'unique_by(.signature)')
-          MERGED_WALLETS=$(jq -s '[.[] | select(type=="array")] | add // [] | unique_by(.signature)' \
-            <<<"$XFERS_W1_DEDUP $XFERS_W2_DEDUP")
-
-          LAST_TBTC_W1=$(parse_transfers "$MERGED_WALLETS" "$WALLET1" "$MINT_TBTC")
-          LAST_TBTC_W2=$(parse_transfers "$MERGED_WALLETS" "$WALLET2" "$MINT_TBTC")
-
-          # ------------ PREZZI ------------
-          PRICE_TBTC=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 \
-            "https://api.coingecko.com/api/v3/simple/price?ids=tbtc&vs_currencies=usd" \
-            | jq -r '.tbtc.usd // 0')
-
-          PRICE_NUMMUS=$(curl -sS --retry 3 --retry-delay 2 --max-time 60 \
-            "https://api.coingecko.com/api/v3/simple/price?ids=nummus-aeternitas&vs_currencies=usd" \
-            | jq -r '."nummus-aeternitas".usd // 0')
-
-          # ------------ VALORI USD ------------
-          VALUE_W1=$(echo "scale=2; $TBTC_BAL_W1 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
-          VALUE_W2=$(echo "scale=2; $TBTC_BAL_W2 * $PRICE_TBTC" | bc -l | xargs printf "%.2f")
-
-          # ------------ OUTPUT JSON (compatibile con index) ------------
-          jq -n \
-            --arg tbtc1 "$TBTC_BAL_W1" \
-            --arg last1 "$LAST_TBTC_W1" \
-            --arg tbtc2 "$TBTC_BAL_W2" \
-            --arg last2 "$LAST_TBTC_W2" \
-            --arg val1 "$VALUE_W1" \
-            --arg val2 "$VALUE_W2" \
-            --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            '{
-              wallet_1: {
-                tbtc_balance: ($tbtc1 | tonumber),
-                tbtc_usd_value: ($val1 | tonumber),
-                last_tbtc_transfers: ($last1 | try fromjson catch [])
-              },
-              vault_wallet_2: {
-                tbtc_balance: ($tbtc2 | tonumber),
-                tbtc_usd_value: ($val2 | tonumber),
-                last_tbtc_transfers: ($last2 | try fromjson catch [])
-              },
-              timestamp: $time
-            }' > data/status.json
-
-          jq -n \
-            --arg price "$PRICE_TBTC" \
-            --arg nummus "$PRICE_NUMMUS" \
-            --arg w1_bal "$TBTC_BAL_W1" \
-            --arg w1_val "$VALUE_W1" \
-            --arg w2_bal "$TBTC_BAL_W2" \
-            --arg w2_val "$VALUE_W2" \
-            --arg time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            '{
-              tbtc_price_usd: ($price | tonumber),
-              nummus_price_usd: ($nummus | tonumber),
-              wallet_1: {
-                tbtc_balance: ($w1_bal | tonumber),
-                tbtc_usd_value: ($w1_val | tonumber)
-              },
-              wallet_2: {
-                tbtc_balance: ($w2_bal | tonumber),
-                tbtc_usd_value: ($w2_val | tonumber)
-              },
-              vault_tbtc_usd_value: ($w2_val | tonumber),
-              timestamp: $time
-            }' > data/prices.json
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq bc curl
+      - name: Fetch ZEC balances, prices, and transactions
+        run: bash scripts/monitor.sh
 
       - name: Commit if changed
         run: |
@@ -235,14 +36,14 @@ jobs:
           git config user.email github-actions@github.com
           if [[ -n "$(git status --porcelain data/)" ]]; then
             git add data/
-            git commit -m "Update: vault balances, tx, prices (hourly)"
+            git commit -m "Update: ZEC vault balances, tx, prices (hourly)"
             git push
           else
             echo "No changes to commit."
           fi
 
       - name: Trigger NUMMUS NAV snapshot
-        if: ${{ always() }}
+        if: ${{ success() }}
         env:
           GH_TOKEN: ${{ secrets.NAV_DISPATCH_TOKEN }}
         run: |

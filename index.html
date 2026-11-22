@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NUMMUS ↠ tBTC Vault DAO Monitor</title>
+  <title>NUMMUS ↠ ZEC Vault DAO Monitor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
@@ -578,17 +578,17 @@
       font-weight:700;
     }
 
-    /* highlight / pulse on tBTC in vault (label + value) */
+    /* highlight / pulse on ZEC in vault (label + value) */
     #vault-balance .k,
     #vault-balance .v{
       color:#ffb347;
       font-size:16px;
-      animation:pulse-tbtc 2.6s ease-in-out infinite;
+      animation:pulse-zec 2.6s ease-in-out infinite;
     }
     #vault-balance img{
       filter:drop-shadow(0 0 14px rgba(255,179,71,.85));
     }
-    @keyframes pulse-tbtc{
+    @keyframes pulse-zec{
       0%,100%{text-shadow:0 0 0 rgba(255,179,71,.0);}
       40%{text-shadow:0 0 18px rgba(255,179,71,.85);}
     }
@@ -600,8 +600,8 @@
 
   <div class="wrap">
     <section class="maintenance-banner" aria-labelledby="maintenance-title">
-      <h2 id="maintenance-title">Dashboard under maintenance</h2>
-      <p>Following the community’s decision, Nummus is transitioning from a tBTC accumulation strategy to a Zcash (ZEC) accumulation strategy. Existing tBTC holdings are being converted to ZEC. Dashboard updates are paused and all figures are held at their November 17, 2026 values. Points after that date repeat the frozen values and do not represent new observations.</p>
+      <h2 id="maintenance-title">Zcash accumulation · November 22, 2026</h2>
+      <p>Following the community’s decision, Nummus now follows a Zcash (ZEC) accumulation strategy. ZEC monitoring resumes from November 22, 2026. Historical figures for November 17–21 remain fixed at their November 17 values and do not represent new observations. <a href="data/archive/frozen-period.json">Frozen period archive</a></p>
     </section>
 
     <!-- HEADER -->
@@ -609,11 +609,11 @@
       <div class="brand-block">
         <div class="brand-logo">
           <img src="images/LOGOnummus.200X200.png" alt="NUMMUS">
-          <img src="images/tbtc.png" alt="tBTC">
+          <img src="images/zcash.png" alt="ZEC">
         </div>
         <div class="brand-text">
-          <h1>NUMMUS ↠ tBTC Vault DAO</h1>
-          <div class="subtitle">On-chain tBTC accumulation monitor</div>
+          <h1>NUMMUS ↠ ZEC Vault DAO</h1>
+          <div class="subtitle">On-chain ZEC accumulation monitor</div>
         </div>
       </div>
 
@@ -626,8 +626,8 @@
           </div>
           <div class="chip">
             <span class="dot" style="background:var(--chipB)"></span>
-            <span class="label">tBTC</span>
-            <span class="val" id="tbtc-price">$—</span>
+            <span class="label">ZEC</span>
+            <span class="val" id="zec-price">$—</span>
           </div>
         </div>
 
@@ -644,16 +644,16 @@
       <div class="flow-label">
         <div class="flow-node">
           <small>PORTFOLIO 1</small>
-          <span>Nummus → tBTC swaps</span>
+          <span>Nummus → ZEC swaps</span>
         </div>
         <div class="flow-arrow">↠</div>
         <div class="flow-node">
           <small>PORTFOLIO 2</small>
-          <span>tBTC accumulation vault</span>
+          <span>ZEC accumulation vault</span>
         </div>
       </div>
       <div class="flow-note">
-        tBTC accumulated in Portfolio 2 is governed on Realms —<br>
+        ZEC accumulated in Portfolio 2 is governed on Realms —<br>
         <b>1 NUMMUS = 1 vote</b> over the treasury.
       </div>
     </section>
@@ -661,8 +661,8 @@
     <!-- MAIN CARDS -->
     <section class="grid">
       <article class="card" id="swap-card">
-        <div class="card-tag">Portfolio 1 · Nummus → tBTC swap activity</div>
-        <h3>tBTC Swap Wallet</h3>
+        <div class="card-tag">Portfolio 1 · Nummus → ZEC swap activity</div>
+        <h3>ZEC Swap Wallet</h3>
         <a class="wallet-link" href="https://solscan.io/account/3X7SW24GtQD3oGKoEhMpk54qqDoy3V7aGg31RdQKf4mh" target="_blank" rel="noopener">
           Open on Solscan
           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
@@ -670,7 +670,7 @@
 
         <div class="balances">
           <div class="kv">
-            <div class="k">Current tBTC balance (swap wallet)</div>
+            <div class="k">Current ZEC balance (swap wallet)</div>
             <div class="v" id="swap-balance">—</div>
           </div>
         </div>
@@ -679,8 +679,8 @@
       </article>
 
       <article class="card" id="vault-card">
-        <div class="card-tag">Portfolio 2 · DAO-governed tBTC vault</div>
-        <h3>Nummus Aeternitas tBTC Vault</h3>
+        <div class="card-tag">Portfolio 2 · DAO-governed ZEC vault</div>
+        <h3>Nummus Aeternitas ZEC Vault</h3>
         <div class="realms">
           <a href="https://app.realms.today/dao/2Czvw7p29thfqNJznuicygBKxh33xoCMuGMH7zbPQ2gp" target="_blank" rel="noopener">
             NUMMUS holder voting
@@ -697,7 +697,7 @@
 
         <div class="balances">
           <div class="kv">
-            <div class="k">tBTC value in vault (USD)</div>
+            <div class="k">ZEC value in vault (USD, DEX Screener)</div>
             <div class="v" id="vault-total-value">—</div>
           </div>
           <div class="line" id="vault-balance"></div>
@@ -707,22 +707,18 @@
       </article>
 
       <div class="update-row">
-        <div id="timestamp">⏳ Loading… <span class="muted">(automatic updates paused)</span></div>
+        <div id="timestamp">⏳ Loading… <span class="muted">(updates every hour, UTC)</span></div>
       </div>
 
       <!-- sotto la card sinistra -->
       <div class="under-left" aria-label="Nummus Hub overview">
         <div class="info-block">
-          <p>NUMMUS is designed around a single accumulation path: automated swaps from NUMMUS to tBTC, followed by the transfer of tBTC into the community Vault.</p>
-          <p>Through the interactive <a class="hub-link" href="https://happydao.github.io/Nummus.Hub/" target="_blank" rel="noopener">NUMMUS HUB</a>, you can follow each tBTC swap, the route to the DAO vault, and the on-chain confirmations behind the accumulated balance.</p>
-          <p>Every displayed treasury metric is focused on tBTC accumulation and the NUMMUS governance that oversees it.</p>
+          <p>NUMMUS is designed around a single accumulation path: automated swaps from NUMMUS to ZEC, followed by the transfer of ZEC into the community Vault.</p>
+          <p>Through the interactive <a class="hub-link" href="https://happydao.github.io/Nummus.Hub/" target="_blank" rel="noopener">NUMMUS HUB</a>, you can follow each ZEC swap, the route to the DAO vault, and the on-chain confirmations behind the accumulated balance.</p>
+          <p>Every displayed treasury metric is focused on ZEC accumulation and the NUMMUS governance that oversees it.</p>
         </div>
       </div>
 
-      <!-- sotto la card destra -->
-      <figure class="under-right" aria-label="Resume image">
-        <img src="images/resume.jpg" alt="Resume">
-      </figure>
     </section>
 
     <footer>
@@ -740,17 +736,24 @@
     window.addEventListener('load', syncToplinksHeight);
     window.addEventListener('resize', syncToplinksHeight);
 
+    function requireZec(data){
+      if(data.asset !== 'ZEC' || data.mint !== 'A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS'){
+        throw new Error('Awaiting the first ZEC update. Historical figures remain in the frozen archive.');
+      }
+    }
+
     async function loadPrices(){
       const res = await fetch('data/prices.json', { cache:'no-store' });
       if(!res.ok) throw new Error('prices.json not found');
       const p = await res.json();
+      requireZec(p);
 
-      document.getElementById('tbtc-price').textContent   = fmtPrice(p.tbtc_price_usd);
+      document.getElementById('zec-price').textContent   = fmtPrice(p.zec_price_usd);
       document.getElementById('nummus-price').textContent = fmtPrice(p.nummus_price_usd);
-      const vaultTbtcUsd = Number(p.vault_tbtc_usd_value) || 0;
+      const vaultZecUsd = Number(p.vault_zec_usd_value) || 0;
 
       document.getElementById('vault-total-value').textContent =
-        `$${vaultTbtcUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+        `$${vaultZecUsd.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
     }
 
@@ -759,7 +762,7 @@
       if(!Number.isFinite(value)) return '$—';
       return `$${value.toLocaleString(undefined,{maximumFractionDigits:8})}`;
     }
-    function fmtTBTC(n){ return Number(n||0).toFixed(8); }
+    function fmtZEC(n){ return Number(n||0).toFixed(8); }
     function fmtUSD(n){ return Number(n||0).toFixed(2); }
 
     function renderTx(containerId, arr){
@@ -781,24 +784,25 @@
       const res = await fetch('data/status.json', { cache:'no-store' });
       if(!res.ok) throw new Error('status.json not found');
       const d = await res.json();
+      requireZec(d);
 
-      const b1 = fmtTBTC(d.wallet_1.tbtc_balance);
-      const v1 = fmtUSD(d.wallet_1.tbtc_usd_value);
-      document.getElementById('swap-balance').textContent = `${b1} tBTC ($${v1})`;
-      renderTx('swap-transfers', d.wallet_1.last_tbtc_transfers);
+      const b1 = fmtZEC(d.wallet_1.zec_balance);
+      const v1 = fmtUSD(d.wallet_1.zec_usd_value);
+      document.getElementById('swap-balance').textContent = `${b1} ZEC ($${v1})`;
+      renderTx('swap-transfers', d.wallet_1.last_zec_transfers);
 
-      const b2 = fmtTBTC(d.vault_wallet_2.tbtc_balance);
-      const v2 = fmtUSD(d.vault_wallet_2.tbtc_usd_value);
+      const b2 = fmtZEC(d.vault_wallet_2.zec_balance);
+      const v2 = fmtUSD(d.vault_wallet_2.zec_usd_value);
       document.getElementById('vault-balance').innerHTML =
-        `<img src="images/tbtc.png" alt="tBTC">
-         <span class="k">tBTC</span>
+        `<img src="images/zcash.png" alt="ZEC">
+         <span class="k">ZEC</span>
          <span class="v">${b2}</span>
          <span class="muted">($${v2})</span>`;
 
-      renderTx('vault-transfers', d.vault_wallet_2.last_tbtc_transfers);
+      renderTx('vault-transfers', d.vault_wallet_2.last_zec_transfers);
 
       document.getElementById('timestamp').innerHTML =
-        'Data frozen as of: ' + (d.timestamp || '—') + ' <span class="muted">(automatic updates paused)</span>';
+        'Last update: ' + (d.timestamp || '—') + ' <span class="muted">(updates every hour, UTC)</span>';
     }
 
     (async function init(){
@@ -806,7 +810,7 @@
         await Promise.all([loadPrices(), loadStatus()]);
       }catch(e){
         console.error(e);
-        document.getElementById('timestamp').textContent='⚠️ Failed to load data';
+        document.getElementById('timestamp').textContent='⚠️ ' + e.message;
       }
     })();
   </script>
